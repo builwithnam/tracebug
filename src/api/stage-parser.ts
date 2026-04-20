@@ -101,41 +101,67 @@ function extractQuerierSummary(parsed: unknown): Record<string, unknown> | null 
     summary.model = responseMetadata["model_name"];
   }
 
-  const tokenUsage = safeGet<Record<string, unknown>>(parsed, [
-    "message",
-    "kwargs",
-    "response_metadata",
-    "token_usage",
-  ]);
+  // Support both camelCase (tokenUsage) and snake_case (token_usage) key formats
+  const tokenUsage =
+    safeGet<Record<string, unknown>>(parsed, [
+      "message",
+      "kwargs",
+      "response_metadata",
+      "tokenUsage",
+    ]) ??
+    safeGet<Record<string, unknown>>(parsed, [
+      "message",
+      "kwargs",
+      "response_metadata",
+      "token_usage",
+    ]);
   if (tokenUsage) {
     summary.tokenUsage = {
-      promptTokens: tokenUsage["prompt_tokens"] ?? null,
-      completionTokens: tokenUsage["completion_tokens"] ?? null,
-      totalTokens: tokenUsage["total_tokens"] ?? null,
+      promptTokens:
+        (tokenUsage["promptTokens"] as number | undefined) ??
+        (tokenUsage["prompt_tokens"] as number | undefined) ??
+        null,
+      completionTokens:
+        (tokenUsage["completionTokens"] as number | undefined) ??
+        (tokenUsage["completion_tokens"] as number | undefined) ??
+        null,
+      totalTokens:
+        (tokenUsage["totalTokens"] as number | undefined) ??
+        (tokenUsage["total_tokens"] as number | undefined) ??
+        null,
     };
   }
 
+  // traceId may live in additional_kwargs.context or at the top level of the stage object
   const context = safeGet<Record<string, unknown>>(parsed, [
     "message",
     "kwargs",
     "additional_kwargs",
     "context",
   ]);
-  if (context?.["traceId"]) {
-    summary.traceId = context["traceId"];
+  const traceId =
+    context?.["traceId"] ??
+    (parsed != null && typeof parsed === "object"
+      ? (parsed as Record<string, unknown>)["traceId"]
+      : undefined);
+  if (traceId) {
+    summary.traceId = traceId;
   }
 
   return Object.keys(summary).length > 0 ? summary : null;
 }
 
 function extractRouterSummary(parsed: unknown): Record<string, unknown> | null {
-  const context = safeGet<Record<string, unknown>>(parsed, [
+  // Router raw may be an array of router run objects; use the first element
+  const item: unknown = Array.isArray(parsed) ? parsed[0] : parsed;
+
+  const context = safeGet<Record<string, unknown>>(item, [
     "message",
     "kwargs",
     "additional_kwargs",
     "context",
   ]);
-  const toolCalls = safeGet<unknown[]>(parsed, [
+  const toolCalls = safeGet<unknown[]>(item, [
     "message",
     "kwargs",
     "additional_kwargs",
@@ -143,37 +169,74 @@ function extractRouterSummary(parsed: unknown): Record<string, unknown> | null {
   ]);
 
   // Try to extract from tool_calls arguments (JSON string)
-  let args: Record<string, unknown> | null = null;
+  let toolCallArgs: Record<string, unknown> | null = null;
   const firstCall = toolCalls?.[0] as Record<string, unknown> | undefined;
   if (firstCall?.["function"]) {
     const fn = firstCall["function"] as Record<string, unknown>;
     if (typeof fn["arguments"] === "string") {
       try {
-        args = JSON.parse(fn["arguments"]);
+        toolCallArgs = JSON.parse(fn["arguments"]) as Record<string, unknown>;
       } catch {
         /* ignore */
       }
     }
   }
 
+  // Also try to extract from scenarioSelectorOutputs (newer format)
+  const scenarioSelectorOutputs = safeGet<Array<Record<string, unknown>>>(item, [
+    "scenarioSelectorOutputs",
+  ]);
+  const firstSelector = scenarioSelectorOutputs?.[0];
+  const selectorArgs = firstSelector?.["toolCall"]
+    ? ((firstSelector["toolCall"] as Record<string, unknown>)["args"] as
+        | Record<string, unknown>
+        | undefined)
+    : null;
+  const scenarioObj = firstSelector?.["scenario"] as Record<string, unknown> | undefined;
+
   const summary: Record<string, unknown> = {};
 
-  const scenarioName = context?.["scenarioName"] ?? args?.["scenario"] ?? args?.["scenarioName"];
+  const scenarioName =
+    context?.["scenarioName"] ??
+    scenarioObj?.["name"] ??
+    toolCallArgs?.["scenario"] ??
+    toolCallArgs?.["scenarioName"];
   if (scenarioName) summary.scenarioName = scenarioName;
 
-  const flowId = context?.["flowId"] ?? args?.["flow_id"] ?? args?.["flowId"];
+  const flowId =
+    context?.["flowId"] ??
+    scenarioObj?.["flowId"] ??
+    toolCallArgs?.["flow_id"] ??
+    toolCallArgs?.["flowId"];
   if (flowId) summary.flowId = flowId;
 
-  const intent = context?.["intent"] ?? args?.["intent"];
+  const intent =
+    context?.["intent"] ??
+    selectorArgs?.["intent"] ??
+    toolCallArgs?.["intent"];
   if (intent) summary.intent = intent;
 
-  const searchType = context?.["searchType"] ?? args?.["search_type"] ?? args?.["searchType"];
+  const searchType =
+    context?.["searchType"] ??
+    selectorArgs?.["search_type"] ??
+    selectorArgs?.["searchType"] ??
+    toolCallArgs?.["search_type"] ??
+    toolCallArgs?.["searchType"];
   if (searchType) summary.searchType = searchType;
 
-  const cypherQuery = context?.["cypherQuery"] ?? args?.["cypher_query"] ?? args?.["cypherQuery"];
-  if (cypherQuery) summary.cypherQuery = truncate(String(cypherQuery), 200);
+  const cypherQuery =
+    context?.["cypherQuery"] ??
+    selectorArgs?.["cypher_query"] ??
+    selectorArgs?.["cypherQuery"] ??
+    toolCallArgs?.["cypher_query"] ??
+    toolCallArgs?.["cypherQuery"];
+  if (cypherQuery) {
+    const cypherStr =
+      typeof cypherQuery === "string" ? cypherQuery : JSON.stringify(cypherQuery);
+    summary.cypherQuery = truncate(cypherStr, 200);
+  }
 
-  summary.toolCallsCount = toolCalls?.length ?? 0;
+  summary.toolCallsCount = toolCalls?.length ?? (Array.isArray(parsed) ? parsed.length : 0);
 
   return Object.keys(summary).length > 0 ? summary : null;
 }
@@ -234,6 +297,9 @@ function extractAgentSummary(parsed: unknown): Record<string, unknown> | null {
 }
 
 function extractGeneratorSummary(parsed: unknown): Record<string, unknown> | null {
+  // Support two formats:
+  // 1. LangChain message format: message.kwargs.content + message.kwargs.additional_kwargs.context
+  // 2. Flat object format: { summary, sources, memory, language, specialties, ... }
   const content = safeGet<string>(parsed, ["message", "kwargs", "content"]);
   const context = safeGet<Record<string, unknown>>(parsed, [
     "message",
@@ -241,36 +307,48 @@ function extractGeneratorSummary(parsed: unknown): Record<string, unknown> | nul
     "additional_kwargs",
     "context",
   ]);
+  const flat =
+    parsed != null && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null;
 
   const summary: Record<string, unknown> = {};
 
-  if (content) {
-    summary.summary = truncate(content, 500);
+  // Summary text: from LangChain content or flat.summary
+  const summaryText =
+    content ??
+    (typeof flat?.["summary"] === "string" ? (flat["summary"] as string) : null);
+  if (summaryText) {
+    summary.summary = truncate(summaryText, 500);
   }
 
-  if (context?.["sourceCount"] != null) {
-    summary.sourceCount = context["sourceCount"];
+  // Language
+  const language = context?.["language"] ?? flat?.["language"];
+  if (language) summary.language = language;
+
+  // Source count: explicit field or derived from sources array
+  const sourceCount =
+    context?.["sourceCount"] ??
+    (Array.isArray(flat?.["sources"]) ? (flat!["sources"] as unknown[]).length : null);
+  if (sourceCount != null) {
+    summary.sourceCount = sourceCount;
   }
 
+  // Memory fields: from context object or flat.memory object
+  const memorySource = (context ?? flat?.["memory"]) as Record<string, unknown> | null;
   const memory: Record<string, unknown> = {};
-  if (context?.["province"]) {
-    memory.province = context["province"];
-  }
-  if (context?.["service"]) {
-    memory.service = context["service"];
-  }
-  if (context?.["bookingState"]) {
-    memory.bookingState = context["bookingState"];
-  }
-  if (context?.["turnCount"] != null) {
-    memory.turnCount = context["turnCount"];
-  }
+  if (memorySource?.["province"]) memory.province = memorySource["province"];
+  if (memorySource?.["service"]) memory.service = memorySource["service"];
+  if (memorySource?.["bookingState"]) memory.bookingState = memorySource["bookingState"];
+  if (memorySource?.["turnCount"] != null) memory.turnCount = memorySource["turnCount"];
   if (Object.keys(memory).length > 0) {
     summary.memory = memory;
   }
 
-  if (context?.["specialties"] && Array.isArray(context["specialties"])) {
-    summary.specialties = context["specialties"];
+  // Specialties
+  const specialties = context?.["specialties"] ?? flat?.["specialties"];
+  if (specialties && Array.isArray(specialties) && specialties.length > 0) {
+    summary.specialties = specialties;
   }
 
   return Object.keys(summary).length > 0 ? summary : null;
@@ -366,29 +444,17 @@ const STAGE_NAMES = [
 
 export function parseAllStages(traces: MessageData[]): ParsedAllStages {
   const stages: Record<string, ParsedStage | null> = {};
-  let statPayload: string | null = null;
 
-  for (const trace of traces) {
-    const rawPayload =
-      typeof trace.payload === "string" ? trace.payload : JSON.stringify(trace.payload);
+  // Each row has one column per stage; use the first (most recent) row.
+  const trace = traces[0] ?? null;
 
-    if (trace.stage === "stat") {
-      statPayload = rawPayload;
-      continue;
-    }
-
-    if ((STAGE_NAMES as readonly string[]).includes(trace.stage)) {
-      stages[trace.stage] = parseStage(trace.stage, rawPayload);
-    }
-  }
-
-  // Ensure all stages are present (even if null)
   for (const stageName of STAGE_NAMES) {
-    stages[stageName] ??= null;
+    const raw = trace ? (trace[stageName as keyof MessageData] as string | null) : null;
+    stages[stageName] = parseStage(stageName, raw);
   }
 
   return {
     stages,
-    stat: parseStat(statPayload),
+    stat: parseStat(trace ? trace.stat : null),
   };
 }

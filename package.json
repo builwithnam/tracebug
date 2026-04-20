@@ -12,7 +12,7 @@
     "src/public/"
   ],
   "scripts": {
-    "build": "tsc && cp -r src/public dist/public",
+    "build": "tsc && cp src/public/app.js src/public/index.html src/public/style.css dist/public/",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "test": "node --test tests/**/*.test.ts",

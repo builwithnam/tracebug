@@ -370,7 +370,9 @@ function createSummaryGrid(summary) {
     const valueEl = document.createElement('div');
     valueEl.className = 'summary-value';
     valueEl.textContent = formatSummaryValue(value);
-    valueEl.title = String(value);
+    valueEl.title = typeof value === 'object' && value !== null
+      ? JSON.stringify(value)
+      : String(value);
 
     row.appendChild(keyEl);
     row.appendChild(valueEl);
@@ -393,6 +395,17 @@ function formatSummaryValue(value) {
   }
   if (typeof value === 'boolean') {
     return value ? 'Yes' : 'No';
+  }
+  if (typeof value === 'object') {
+    if (Array.isArray(value)) {
+      return `[${value.length} items]`;
+    }
+    // For nested objects like tokenUsage, render key: val pairs inline
+    const parts = Object.entries(value)
+      .map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toLocaleString() : v}`)
+      .join(' · ');
+    if (parts.length > 120) return parts.slice(0, 120) + '...';
+    return parts;
   }
   const str = String(value);
   if (str.length > 100) {
