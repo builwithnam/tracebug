@@ -65,30 +65,34 @@ describe("database pool", () => {
     `);
 
     // Insert test data
-    await dbConn.execute(
-      "INSERT INTO share (id, session_id) VALUES (?, ?)",
-      ["test-share-123", "session-abc"]
-    );
+    await dbConn.execute("INSERT INTO share (id, session_id) VALUES (?, ?)", [
+      "test-share-123",
+      "session-abc",
+    ]);
 
-    await dbConn.execute(
-      "INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)",
-      ["session-abc", "user", "Hello"]
-    );
+    await dbConn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+      "session-abc",
+      "user",
+      "Hello",
+    ]);
 
-    await dbConn.execute(
-      "INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)",
-      ["session-abc", "assistant", "Hi there!"]
-    );
+    await dbConn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+      "session-abc",
+      "assistant",
+      "Hi there!",
+    ]);
 
-    await dbConn.execute(
-      "INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)",
-      ["session-abc", "querier", JSON.stringify({ intent: "greeting" })]
-    );
+    await dbConn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
+      "session-abc",
+      "querier",
+      JSON.stringify({ intent: "greeting" }),
+    ]);
 
-    await dbConn.execute(
-      "INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)",
-      ["session-abc", "router", JSON.stringify({ scenario: "greeting" })]
-    );
+    await dbConn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
+      "session-abc",
+      "router",
+      JSON.stringify({ scenario: "greeting" }),
+    ]);
 
     await dbConn.end();
   });

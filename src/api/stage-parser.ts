@@ -6,7 +6,7 @@ export interface ParsedStage {
   error?: string;
 }
 
-interface LangChainAIMessage {
+export interface LangChainAIMessage {
   message?: {
     kwargs?: {
       additional_kwargs?: {
@@ -58,7 +58,12 @@ function safeGet<T>(obj: unknown, path: string[]): T | null {
 }
 
 function extractToolCallArgs(parsed: unknown): Record<string, unknown> | null {
-  const toolCalls = safeGet<unknown[]>(parsed, ["message", "kwargs", "additional_kwargs", "tool_calls"]);
+  const toolCalls = safeGet<unknown[]>(parsed, [
+    "message",
+    "kwargs",
+    "additional_kwargs",
+    "tool_calls",
+  ]);
   if (!toolCalls || toolCalls.length === 0) return null;
 
   const firstCall = toolCalls[0];
@@ -77,7 +82,11 @@ function extractToolCallArgs(parsed: unknown): Record<string, unknown> | null {
 
 function extractQuerierSummary(parsed: unknown): Record<string, unknown> | null {
   const toolCallArgs = extractToolCallArgs(parsed);
-  const responseMetadata = safeGet<Record<string, unknown>>(parsed, ["message", "kwargs", "response_metadata"]);
+  const responseMetadata = safeGet<Record<string, unknown>>(parsed, [
+    "message",
+    "kwargs",
+    "response_metadata",
+  ]);
 
   const summary: Record<string, unknown> = {};
 
@@ -92,7 +101,12 @@ function extractQuerierSummary(parsed: unknown): Record<string, unknown> | null 
     summary.model = responseMetadata["model_name"];
   }
 
-  const tokenUsage = safeGet<Record<string, unknown>>(parsed, ["message", "kwargs", "response_metadata", "token_usage"]);
+  const tokenUsage = safeGet<Record<string, unknown>>(parsed, [
+    "message",
+    "kwargs",
+    "response_metadata",
+    "token_usage",
+  ]);
   if (tokenUsage) {
     summary.tokenUsage = {
       promptTokens: tokenUsage["prompt_tokens"] ?? null,
@@ -101,7 +115,12 @@ function extractQuerierSummary(parsed: unknown): Record<string, unknown> | null 
     };
   }
 
-  const context = safeGet<Record<string, unknown>>(parsed, ["message", "kwargs", "additional_kwargs", "context"]);
+  const context = safeGet<Record<string, unknown>>(parsed, [
+    "message",
+    "kwargs",
+    "additional_kwargs",
+    "context",
+  ]);
   if (context?.["traceId"]) {
     summary.traceId = context["traceId"];
   }
@@ -110,8 +129,18 @@ function extractQuerierSummary(parsed: unknown): Record<string, unknown> | null 
 }
 
 function extractRouterSummary(parsed: unknown): Record<string, unknown> | null {
-  const context = safeGet<Record<string, unknown>>(parsed, ["message", "kwargs", "additional_kwargs", "context"]);
-  const toolCalls = safeGet<unknown[]>(parsed, ["message", "kwargs", "additional_kwargs", "tool_calls"]);
+  const context = safeGet<Record<string, unknown>>(parsed, [
+    "message",
+    "kwargs",
+    "additional_kwargs",
+    "context",
+  ]);
+  const toolCalls = safeGet<unknown[]>(parsed, [
+    "message",
+    "kwargs",
+    "additional_kwargs",
+    "tool_calls",
+  ]);
 
   // Try to extract from tool_calls arguments (JSON string)
   let args: Record<string, unknown> | null = null;
@@ -119,7 +148,11 @@ function extractRouterSummary(parsed: unknown): Record<string, unknown> | null {
   if (firstCall?.["function"]) {
     const fn = firstCall["function"] as Record<string, unknown>;
     if (typeof fn["arguments"] === "string") {
-      try { args = JSON.parse(fn["arguments"]); } catch { /* ignore */ }
+      try {
+        args = JSON.parse(fn["arguments"]);
+      } catch {
+        /* ignore */
+      }
     }
   }
 
@@ -146,7 +179,12 @@ function extractRouterSummary(parsed: unknown): Record<string, unknown> | null {
 }
 
 function extractScenarioSelectorSummary(parsed: unknown): Record<string, unknown> | null {
-  const context = safeGet<Record<string, unknown>>(parsed, ["message", "kwargs", "additional_kwargs", "context"]);
+  const context = safeGet<Record<string, unknown>>(parsed, [
+    "message",
+    "kwargs",
+    "additional_kwargs",
+    "context",
+  ]);
 
   const summary: Record<string, unknown> = {};
 
@@ -164,7 +202,12 @@ function extractScenarioSelectorSummary(parsed: unknown): Record<string, unknown
 }
 
 function extractAgentSummary(parsed: unknown): Record<string, unknown> | null {
-  const context = safeGet<Record<string, unknown>>(parsed, ["message", "kwargs", "additional_kwargs", "context"]);
+  const context = safeGet<Record<string, unknown>>(parsed, [
+    "message",
+    "kwargs",
+    "additional_kwargs",
+    "context",
+  ]);
 
   const summary: Record<string, unknown> = {};
 
@@ -192,7 +235,12 @@ function extractAgentSummary(parsed: unknown): Record<string, unknown> | null {
 
 function extractGeneratorSummary(parsed: unknown): Record<string, unknown> | null {
   const content = safeGet<string>(parsed, ["message", "kwargs", "content"]);
-  const context = safeGet<Record<string, unknown>>(parsed, ["message", "kwargs", "additional_kwargs", "context"]);
+  const context = safeGet<Record<string, unknown>>(parsed, [
+    "message",
+    "kwargs",
+    "additional_kwargs",
+    "context",
+  ]);
 
   const summary: Record<string, unknown> = {};
 
@@ -238,7 +286,10 @@ function extractQuestionerSummary(parsed: unknown): Record<string, unknown> | nu
   return null;
 }
 
-function extractSummaryForStage(stageName: string, parsed: unknown): Record<string, unknown> | null {
+function extractSummaryForStage(
+  stageName: string,
+  parsed: unknown,
+): Record<string, unknown> | null {
   switch (stageName) {
     case "querier":
       return extractQuerierSummary(parsed);
@@ -304,21 +355,29 @@ export function parseStat(rawValue: string | null): StatTiming {
   }
 }
 
-const STAGE_NAMES = ["querier", "router", "scenario_selector", "agent", "generator", "questioner"] as const;
+const STAGE_NAMES = [
+  "querier",
+  "router",
+  "scenario_selector",
+  "agent",
+  "generator",
+  "questioner",
+] as const;
 
 export function parseAllStages(traces: MessageData[]): ParsedAllStages {
   const stages: Record<string, ParsedStage | null> = {};
   let statPayload: string | null = null;
 
   for (const trace of traces) {
-    const rawPayload = typeof trace.payload === "string" ? trace.payload : JSON.stringify(trace.payload);
+    const rawPayload =
+      typeof trace.payload === "string" ? trace.payload : JSON.stringify(trace.payload);
 
     if (trace.stage === "stat") {
       statPayload = rawPayload;
       continue;
     }
 
-    if (STAGE_NAMES.includes(trace.stage as any)) {
+    if ((STAGE_NAMES as readonly string[]).includes(trace.stage)) {
       stages[trace.stage] = parseStage(trace.stage, rawPayload);
     }
   }

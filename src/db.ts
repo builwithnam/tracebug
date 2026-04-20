@@ -47,16 +47,13 @@ export function createPool(dbConfig: DbConfig): Pool {
   return pool;
 }
 
-export async function getSessionId(
-  pool: Pool,
-  shareId: string
-): Promise<string | null> {
+export async function getSessionId(pool: Pool, shareId: string): Promise<string | null> {
   const conn = await pool.getConnection();
 
   try {
     const [shares] = await conn.query<RowDataPacket[]>(
       "SELECT session_id FROM share WHERE id = ?",
-      [shareId]
+      [shareId],
     );
 
     if (shares.length === 0) {
@@ -69,16 +66,13 @@ export async function getSessionId(
   }
 }
 
-export async function getMessages(
-  pool: Pool,
-  sessionId: string
-): Promise<Message[]> {
+export async function getMessages(pool: Pool, sessionId: string): Promise<Message[]> {
   const conn = await pool.getConnection();
 
   try {
     const [messages] = await conn.query<RowDataPacket[]>(
       "SELECT * FROM message WHERE session_id = ? ORDER BY id",
-      [sessionId]
+      [sessionId],
     );
 
     return messages as Message[];
@@ -87,16 +81,13 @@ export async function getMessages(
   }
 }
 
-export async function getMessageData(
-  pool: Pool,
-  sessionId: string
-): Promise<MessageData[]> {
+export async function getMessageData(pool: Pool, sessionId: string): Promise<MessageData[]> {
   const conn = await pool.getConnection();
 
   try {
     const [traces] = await conn.query<RowDataPacket[]>(
       "SELECT * FROM message_data WHERE session_id = ? ORDER BY id",
-      [sessionId]
+      [sessionId],
     );
 
     return traces as MessageData[];
@@ -107,7 +98,7 @@ export async function getMessageData(
 
 export async function getSessionByShareId(
   pool: Pool,
-  shareId: string
+  shareId: string,
 ): Promise<SessionData | null> {
   const sessionId = await getSessionId(pool, shareId);
 

@@ -16,17 +16,22 @@ const TEST_DB_CONFIG = {
 const CONFIG = { port: 0, db: TEST_DB_CONFIG }; // port 0 = random available port
 
 let server: http.Server;
-let baseUrl: string;
+let _baseUrl: string;
 
-function get(port: number, path: string): Promise<{ status: number; headers: http.IncomingHttpHeaders; body: string }> {
+function get(
+  port: number,
+  path: string,
+): Promise<{ status: number; headers: http.IncomingHttpHeaders; body: string }> {
   return new Promise((resolve, reject) => {
-    http.get(`http://localhost:${port}${path}`, (res) => {
-      let body = "";
-      res.on("data", (chunk) => (body += chunk));
-      res.on("end", () => {
-        resolve({ status: res.statusCode ?? 0, headers: res.headers, body });
-      });
-    }).on("error", reject);
+    http
+      .get(`http://localhost:${port}${path}`, (res) => {
+        let body = "";
+        res.on("data", (chunk) => (body += chunk));
+        res.on("end", () => {
+          resolve({ status: res.statusCode ?? 0, headers: res.headers, body });
+        });
+      })
+      .on("error", reject);
   });
 }
 
@@ -77,102 +82,97 @@ describe("Integration: full flow end-to-end", () => {
       "session-e2e",
     ]);
 
-    await conn.execute(
-      "INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)",
-      ["session-e2e", "user", "I need help with booking"]
-    );
+    await conn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+      "session-e2e",
+      "user",
+      "I need help with booking",
+    ]);
 
-    await conn.execute(
-      "INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)",
-      ["session-e2e", "assistant", "Sure! I can help you with that. What service are you looking for?"]
-    );
+    await conn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+      "session-e2e",
+      "assistant",
+      "Sure! I can help you with that. What service are you looking for?",
+    ]);
 
-    await conn.execute(
-      "INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)",
-      ["session-e2e", "user", "Dental cleaning"]
-    );
+    await conn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+      "session-e2e",
+      "user",
+      "Dental cleaning",
+    ]);
 
-    await conn.execute(
-      "INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)",
-      ["session-e2e", "assistant", "Let me find dental cleaning options for you."]
-    );
+    await conn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+      "session-e2e",
+      "assistant",
+      "Let me find dental cleaning options for you.",
+    ]);
 
     // Insert querier trace
-    await conn.execute(
-      "INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)",
-      [
-        "session-e2e",
-        "querier",
-        JSON.stringify({
-          message: {
-            kwargs: {
-              content: "",
-              additional_kwargs: {
-                tool_calls: [
-                  {
-                    function: {
-                      name: "detect_intent",
-                      arguments: JSON.stringify({ language: "en", intent: "booking" }),
-                    },
+    await conn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
+      "session-e2e",
+      "querier",
+      JSON.stringify({
+        message: {
+          kwargs: {
+            content: "",
+            additional_kwargs: {
+              tool_calls: [
+                {
+                  function: {
+                    name: "detect_intent",
+                    arguments: JSON.stringify({ language: "en", intent: "booking" }),
                   },
-                ],
-                context: { traceId: "trace-e2e-001" },
-              },
-              response_metadata: {
-                model_name: "gpt-4",
-                token_usage: { prompt_tokens: 150, completion_tokens: 30, total_tokens: 180 },
-              },
+                },
+              ],
+              context: { traceId: "trace-e2e-001" },
+            },
+            response_metadata: {
+              model_name: "gpt-4",
+              token_usage: { prompt_tokens: 150, completion_tokens: 30, total_tokens: 180 },
             },
           },
-        }),
-      ]
-    );
+        },
+      }),
+    ]);
 
     // Insert router trace
-    await conn.execute(
-      "INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)",
-      [
-        "session-e2e",
-        "router",
-        JSON.stringify({
-          message: {
-            kwargs: {
-              content: "",
-              additional_kwargs: {
-                tool_calls: [
-                  {
-                    function: {
-                      name: "route_query",
-                      arguments: JSON.stringify({
-                        scenario: "dental_booking",
-                        flow_id: "flow-001",
-                        intent: "book_appointment",
-                        search_type: "semantic",
-                      }),
-                    },
+    await conn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
+      "session-e2e",
+      "router",
+      JSON.stringify({
+        message: {
+          kwargs: {
+            content: "",
+            additional_kwargs: {
+              tool_calls: [
+                {
+                  function: {
+                    name: "route_query",
+                    arguments: JSON.stringify({
+                      scenario: "dental_booking",
+                      flow_id: "flow-001",
+                      intent: "book_appointment",
+                      search_type: "semantic",
+                    }),
                   },
-                ],
-              },
+                },
+              ],
             },
           },
-        }),
-      ]
-    );
+        },
+      }),
+    ]);
 
     // Insert stat trace
-    await conn.execute(
-      "INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)",
-      [
-        "session-e2e",
-        "stat",
-        JSON.stringify({
-          querierDuration: 120,
-          routerDuration: 85,
-          agentDuration: 340,
-          generatorDuration: 200,
-        }),
-      ]
-    );
+    await conn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
+      "session-e2e",
+      "stat",
+      JSON.stringify({
+        querierDuration: 120,
+        routerDuration: 85,
+        agentDuration: 340,
+        generatorDuration: 200,
+      }),
+    ]);
 
     await conn.end();
 
@@ -183,7 +183,7 @@ describe("Integration: full flow end-to-end", () => {
     });
 
     const addr = server.address() as { port: number };
-    baseUrl = `http://localhost:${addr.port}`;
+    _baseUrl = `http://localhost:${addr.port}`;
   });
 
   after(async () => {
@@ -244,7 +244,7 @@ describe("Integration: full flow end-to-end", () => {
   it("returns 404 for non-existent share_id", async () => {
     const res = await get(
       (server.address() as { port: number }).port,
-      "/api/session?share_id=does-not-exist"
+      "/api/session?share_id=does-not-exist",
     );
     assert.strictEqual(res.status, 404);
     const body = JSON.parse(res.body);
@@ -256,7 +256,7 @@ describe("Integration: full flow end-to-end", () => {
   it("returns valid session data for existing share_id", async () => {
     const res = await get(
       (server.address() as { port: number }).port,
-      "/api/session?share_id=test-share-abc"
+      "/api/session?share_id=test-share-abc",
     );
 
     assert.strictEqual(res.status, 200);
@@ -307,7 +307,7 @@ describe("Integration: full flow end-to-end", () => {
   it("includes CORS headers on all API responses", async () => {
     const res = await get(
       (server.address() as { port: number }).port,
-      "/api/session?share_id=test-share-abc"
+      "/api/session?share_id=test-share-abc",
     );
     assert.strictEqual(res.headers["access-control-allow-origin"], "*");
     assert.ok(res.headers["content-type"]?.includes("application/json"));
@@ -318,7 +318,7 @@ describe("Integration: full flow end-to-end", () => {
   it("extracts querier summary fields correctly", async () => {
     const res = await get(
       (server.address() as { port: number }).port,
-      "/api/session?share_id=test-share-abc"
+      "/api/session?share_id=test-share-abc",
     );
     const body = JSON.parse(res.body);
     const querier = body.traces[0].stages.querier;
@@ -338,7 +338,7 @@ describe("Integration: full flow end-to-end", () => {
   it("extracts router summary fields correctly", async () => {
     const res = await get(
       (server.address() as { port: number }).port,
-      "/api/session?share_id=test-share-abc"
+      "/api/session?share_id=test-share-abc",
     );
     const body = JSON.parse(res.body);
     const router = body.traces[0].stages.router;

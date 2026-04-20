@@ -15,7 +15,12 @@
     "build": "tsc && cp -r src/public dist/public",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "test": "node --test tests/**/*.test.ts"
+    "test": "node --test tests/**/*.test.ts",
+    "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' 'tests/**/*.ts' --fix",
+    "format": "prettier --write src/ tests/",
+    "format:check": "prettier --check src/ tests/",
+    "check": "npm run lint && npm run format:check"
   },
   "keywords": [
     "debug",
@@ -30,8 +35,14 @@
     "open": "^10.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.19.17",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^17.24.0",
+    "prettier": "^3.8.3",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.58.2"
   }
 }

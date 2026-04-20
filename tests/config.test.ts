@@ -17,15 +17,18 @@ describe("config loading", () => {
 
   it("should load valid config successfully", async () => {
     fs.mkdirSync(CONFIG_DIR, { recursive: true });
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify({
-      db: {
-        host: "localhost",
-        port: 3306,
-        user: "testuser",
-        password: "testpass",
-        database: "testdb"
-      }
-    }));
+    fs.writeFileSync(
+      CONFIG_PATH,
+      JSON.stringify({
+        db: {
+          host: "localhost",
+          port: 3306,
+          user: "testuser",
+          password: "testpass",
+          database: "testdb",
+        },
+      }),
+    );
 
     // This will fail because config.ts doesn't exist yet
     const { loadConfig } = await import("../src/config.ts");

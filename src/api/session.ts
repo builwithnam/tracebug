@@ -82,7 +82,7 @@ function groupTracesByMessageId(traces: MessageData[]): TraceResponse[] {
 export async function handleSession(
   _req: IncomingMessage,
   res: ServerResponse,
-  config: AppConfig
+  config: AppConfig,
 ): Promise<void> {
   const url = new URL(_req.url ?? "/", "http://localhost");
   const shareId = url.searchParams.get("share_id");

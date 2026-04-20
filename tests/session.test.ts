@@ -3,7 +3,8 @@ import assert from "node:assert";
 import { IncomingMessage, ServerResponse } from "http";
 import mysql from "mysql2/promise";
 import { handleSession } from "../dist/api/session.js";
-import { createPool, closePool } from "../dist/db.js";
+import { closePool } from "../dist/db.js";
+// createPool is used via the handleSession handler which initializes the pool internally
 
 interface TestResponse extends ServerResponse {
   getStatusCode(): number;
@@ -90,51 +91,47 @@ describe("GET /api/session", () => {
       )
     `);
 
-    await conn.execute(
-      "INSERT INTO share (id, session_id) VALUES (?, ?)",
-      ["valid-share-id", "session-123"]
-    );
+    await conn.execute("INSERT INTO share (id, session_id) VALUES (?, ?)", [
+      "valid-share-id",
+      "session-123",
+    ]);
 
-    await conn.execute(
-      "INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)",
-      ["session-123", "user", "Hello"]
-    );
+    await conn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+      "session-123",
+      "user",
+      "Hello",
+    ]);
 
-    await conn.execute(
-      "INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)",
-      ["session-123", "assistant", "Hi there!"]
-    );
+    await conn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+      "session-123",
+      "assistant",
+      "Hi there!",
+    ]);
 
-    await conn.execute(
-      "INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)",
-      [
-        "session-123",
-        "querier",
-        JSON.stringify({
-          message: {
-            kwargs: {
-              content: "test query",
-              additional_kwargs: {
-                context: { traceId: "trace-123" },
-                response_metadata: { model_name: "gpt-4" },
-              },
+    await conn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
+      "session-123",
+      "querier",
+      JSON.stringify({
+        message: {
+          kwargs: {
+            content: "test query",
+            additional_kwargs: {
+              context: { traceId: "trace-123" },
+              response_metadata: { model_name: "gpt-4" },
             },
           },
-        }),
-      ]
-    );
+        },
+      }),
+    ]);
 
-    await conn.execute(
-      "INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)",
-      [
-        "session-123",
-        "stat",
-        JSON.stringify({
-          querierDuration: 100,
-          routerDuration: 50,
-        }),
-      ]
-    );
+    await conn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
+      "session-123",
+      "stat",
+      JSON.stringify({
+        querierDuration: 100,
+        routerDuration: 50,
+      }),
+    ]);
 
     await conn.end();
   });
@@ -207,7 +204,7 @@ describe("GET /api/session", () => {
     assert.ok(trace.stages.querier);
     assert.ok("summary" in trace.stages.querier);
     assert.ok("raw" in trace.stages.querier);
-    
+
     // Verify stat was parsed
     assert.ok(trace.stat);
     assert.strictEqual(trace.stat.querierDuration, 100);
