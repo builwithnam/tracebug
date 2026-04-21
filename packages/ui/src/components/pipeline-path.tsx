@@ -18,7 +18,7 @@ function PipelinePath({ stages, className }: PipelinePathProps) {
         <React.Fragment key={stage.name}>
           <span
             className={cn(
-              "inline-flex items-center text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 leading-none",
+              "inline-flex items-center text-xs font-medium px-5 py-2 rounded-md transition-all duration-200 leading-none",
               stage.active
                 ? "bg-primary/10 text-primary border border-primary/30"
                 : "bg-muted text-foreground-secondary",
