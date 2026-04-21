@@ -119,7 +119,7 @@ function JsonObject({
 }) {
   const entries = Object.entries(data);
   const [collapsed, setCollapsed] = React.useState(false);
-  const indent = (depth + 1) * 2;
+  const indent = (depth + 1) * 1.5;
 
   if (entries.length === 0) {
     return <span className="text-foreground font-medium">{"{}"}</span>;
@@ -183,7 +183,7 @@ function JsonArray({
   maxStringLength: number;
 }) {
   const [collapsed, setCollapsed] = React.useState(false);
-  const indent = (depth + 1) * 2;
+  const indent = (depth + 1) * 1.5;
 
   if (data.length === 0) {
     return <span className="text-foreground font-medium">{"[]"}</span>;
