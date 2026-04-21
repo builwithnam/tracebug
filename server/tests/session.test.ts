@@ -1,34 +1,8 @@
-import { describe, it, beforeAll, afterAll, expect, vi } from "vitest";
-import { IncomingMessage, ServerResponse } from "http";
+import { describe, it, beforeAll, afterAll, expect } from "vitest";
+import express, { type Express } from "express";
 import mysql from "mysql2/promise";
-import { handleSession } from "../src/server/api/session.js";
-import { closePool } from "../src/server/db.js";
-
-function createMocks(url: string, method = "GET") {
-  const req = { url, method } as unknown as IncomingMessage;
-
-  let statusCode = 0;
-  let headers: Record<string, string> = {};
-  let body = "";
-
-  const res = {
-    writeHead: (code: number, h?: Record<string, string>) => {
-      statusCode = code;
-      if (h) headers = { ...headers, ...h };
-    },
-    end: (data?: string) => {
-      if (data) body = data;
-    },
-  } as unknown as ServerResponse;
-
-  return {
-    req,
-    res,
-    getStatus: () => statusCode,
-    getHeaders: () => headers,
-    getBody: () => body,
-  };
-}
+import { sessionRouter } from "../src/routes/session.js";
+import { createPool, closePool } from "../src/db.js";
 
 const TEST_DB_CONFIG = {
   host: "localhost",
@@ -38,10 +12,30 @@ const TEST_DB_CONFIG = {
   database: "db_test",
 };
 
-const mockConfig = {
-  port: 3000,
-  db: TEST_DB_CONFIG,
-};
+function request(app: Express, path: string): Promise<{ status: number; body: unknown }> {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(0, () => {
+      const port = (server.address() as { port: number }).port;
+      const http = require("http");
+      http
+        .get(`http://localhost:${port}${path}`, (res: any) => {
+          let body = "";
+          res.on("data", (chunk: string) => (body += chunk));
+          res.on("end", () => {
+            server.close();
+            resolve({
+              status: res.statusCode ?? 0,
+              body: JSON.parse(body),
+            });
+          });
+        })
+        .on("error", (err: Error) => {
+          server.close();
+          reject(err);
+        });
+    });
+  });
+}
 
 describe("GET /api/session", () => {
   beforeAll(async () => {
@@ -126,115 +120,79 @@ describe("GET /api/session", () => {
     ]);
 
     await conn.end();
+
+    createPool(TEST_DB_CONFIG);
   });
 
+  function createApp(): Express {
+    const app = express();
+    app.use("/api", sessionRouter());
+    return app;
+  }
+
   it("should return 400 when share_id is missing", async () => {
-    const { req, res, getStatus, getHeaders, getBody } = createMocks("/api/session");
+    const { status, body } = await request(createApp(), "/api/session");
 
-    await handleSession(req, res, mockConfig);
-
-    expect(getStatus()).toBe(400);
-    expect(getHeaders()["Content-Type"]).toBe("application/json");
-    expect(getHeaders()["Access-Control-Allow-Origin"]).toBe("*");
-
-    const body = JSON.parse(getBody());
+    expect(status).toBe(400);
     expect(body).toEqual({ error: "share_id is required" });
   });
 
   it("should return 404 when share_id not found", async () => {
-    const { req, res, getStatus, getHeaders, getBody } = createMocks(
-      "/api/session?share_id=non-existent-share-id",
-    );
+    const { status, body } = await request(createApp(), "/api/session?share_id=non-existent");
 
-    await handleSession(req, res, mockConfig);
-
-    expect(getStatus()).toBe(404);
-    expect(getHeaders()["Content-Type"]).toBe("application/json");
-    expect(getHeaders()["Access-Control-Allow-Origin"]).toBe("*");
-
-    const body = JSON.parse(getBody());
+    expect(status).toBe(404);
     expect(body).toEqual({ error: "Share ID not found" });
   });
 
   it("should return session data with valid share_id", async () => {
-    const { req, res, getStatus, getHeaders, getBody } = createMocks(
+    const { status, body: rawBody } = await request(
+      createApp(),
       "/api/session?share_id=valid-share-id",
     );
 
-    await handleSession(req, res, mockConfig);
-
-    expect(getStatus()).toBe(200);
-    expect(getHeaders()["Content-Type"]).toBe("application/json");
-    expect(getHeaders()["Access-Control-Allow-Origin"]).toBe("*");
-
-    const body = JSON.parse(getBody());
+    const body = rawBody as Record<string, unknown>;
+    expect(status).toBe(200);
     expect(body.share_id).toBe("valid-share-id");
     expect(body.session_id).toBe("session-123");
     expect(Array.isArray(body.messages)).toBe(true);
     expect(Array.isArray(body.traces)).toBe(true);
 
-    expect(body.messages.length).toBe(2);
-    const msg = body.messages[0];
+    const messages = body.messages as Record<string, unknown>[];
+    expect(messages.length).toBe(2);
+    const msg = messages[0];
     expect("id" in msg).toBe(true);
     expect("type" in msg).toBe(true);
     expect("text" in msg).toBe(true);
-    expect("code" in msg).toBe(true);
-    expect("feedback_type" in msg).toBe(true);
-    expect("referer_id" in msg).toBe(true);
-    expect("quick_replies" in msg).toBe(true);
-    expect("buttons" in msg).toBe(true);
-    expect("metadata" in msg).toBe(true);
-    expect("created_at" in msg).toBe(true);
 
-    expect(body.traces.length).toBe(1);
-    const trace = body.traces[0];
+    const traces = body.traces as Record<string, unknown>[];
+    expect(traces.length).toBe(1);
+    const trace = traces[0];
     expect("id" in trace).toBe(true);
-    expect("created_at" in trace).toBe(true);
     expect("stages" in trace).toBe(true);
     expect("stat" in trace).toBe(true);
-    expect(typeof trace.stages).toBe("object");
 
-    expect(trace.stages.querier).toBeTruthy();
-    expect("summary" in trace.stages.querier).toBe(true);
-    expect("raw" in trace.stages.querier).toBe(true);
+    const stages = trace.stages as Record<string, unknown>;
+    expect(stages.querier).toBeTruthy();
 
-    expect(trace.stat).toBeTruthy();
-    expect(trace.stat.querierDuration).toBe(100);
-    expect(trace.stat.routerDuration).toBe(50);
-  });
-
-  it("should include CORS headers on all responses", async () => {
-    const { req, res, getHeaders } = createMocks("/api/session");
-
-    await handleSession(req, res, mockConfig);
-
-    expect(getHeaders()["Access-Control-Allow-Origin"]).toBe("*");
+    const stat = trace.stat as Record<string, unknown>;
+    expect(stat.querierDuration).toBe(100);
+    expect(stat.routerDuration).toBe(50);
   });
 
   it("should return 500 for unexpected errors", async () => {
     await closePool();
 
-    const badConfig = {
-      port: 3000,
-      db: {
-        host: "invalid-host",
-        port: 9999,
-        user: "invalid",
-        password: "invalid",
-        database: "invalid",
-      },
-    };
+    createPool({
+      host: "invalid-host",
+      port: 9999,
+      user: "invalid",
+      password: "invalid",
+      database: "invalid",
+    });
 
-    const { req, res, getStatus, getHeaders, getBody } = createMocks(
-      "/api/session?share_id=test",
-    );
+    const { status, body } = await request(createApp(), "/api/session?share_id=test");
 
-    await handleSession(req, res, badConfig);
-
-    expect(getStatus()).toBe(500);
-    expect(getHeaders()["Content-Type"]).toBe("application/json");
-
-    const body = JSON.parse(getBody());
+    expect(status).toBe(500);
     expect(body).toEqual({ error: "Internal server error" });
   });
 

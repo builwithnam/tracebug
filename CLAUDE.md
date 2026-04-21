@@ -6,18 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development
 ```bash
-pnpm install              # Install dependencies
-pnpm build                # Build all packages (turbo cached)
-pnpm dev                  # Watch mode for all packages
-pnpm --filter web start   # Start the web server (after build)
+pnpm install                       # Install dependencies
+pnpm build                         # Build all packages (turbo cached)
+pnpm dev                           # Watch mode for all packages
+pnpm --filter web dev              # Start Next.js dev server
+pnpm --filter @tracebug/server dev # Start Express API server
 ```
 
 ### Testing
 ```bash
-pnpm test                 # Run all tests (vitest)
-pnpm --filter web test            # Run web app tests
-pnpm --filter web test:watch      # Watch mode for web tests
-pnpm --filter web test tests/session.test.ts  # Run single test file
+pnpm test                                    # Run all tests (vitest)
+pnpm --filter @tracebug/server test          # Run server tests
+pnpm --filter @tracebug/server test:watch    # Watch mode for server tests
 ```
 
 ### Linting & Formatting
@@ -26,14 +26,12 @@ pnpm lint                 # Lint all packages
 pnpm lint:fix             # Lint and fix all packages
 pnpm format               # Format with Prettier
 pnpm check                # Lint + format check
-pnpm --filter web lint    # Lint web app only
-pnpm --filter web format  # Format web app only
 ```
 
 ### Type Checking
 ```bash
-pnpm --filter web type-check  # TypeScript type check (no emit)
-pnpm --filter @tracebug/core type-check  # Type check core package
+pnpm --filter @tracebug/server type-check  # Type check server
+pnpm --filter @tracebug/core type-check    # Type check core package
 ```
 
 ## Architecture
@@ -42,9 +40,21 @@ This is a **pnpm workspace monorepo** using **Turborepo** for task orchestration
 
 ```
 tracebug/
-├── apps/web/              # Web UI + API server (Node.js, ESM)
+├── server/                # @tracebug/server — Express API server (Node.js, ESM)
+│   ├── src/
+│   │   ├── index.ts       # Express entry point
+│   │   ├── config.ts      # Loads ~/.tracebug/settings.json
+│   │   ├── db.ts          # MySQL connection pool and queries
+│   │   └── routes/
+│   │       └── session.ts # GET /api/session route
+│   └── tests/             # Server tests (session, db, config, integration)
+├── apps/web/              # Next.js frontend (App Router)
+│   └── src/app/
+│       ├── page.tsx       # Landing page (enter share ID)
+│       └── session/       # Session view (reads share_id from URL)
 ├── packages/
 │   ├── core/              # @tracebug/core — headless business logic
+│   ├── ui/                # @tracebug/ui — React UI components
 │   └── tsconfig/          # @tracebug/tsconfig — shared TypeScript config
 ├── turbo.json             # Turborepo task pipeline configuration
 └── pnpm-workspace.yaml    # Workspace definitions
@@ -56,12 +66,18 @@ Platform-agnostic package with **zero runtime dependencies**. Contains:
 - Pipeline stage parsing (`parseStage`, `parseAllStages`, `parseStat`)
 - Response shaping (`messageToResponse`, `groupTracesByMessageId`)
 
-### apps/web
-Thin HTTP server that uses `@tracebug/core` for business logic and `mysql2` for database access.
-- Entry point: `src/index.ts`
-- Server: `src/server.ts` — serves static files and handles `/api/session`
-- API: `src/api/session.ts` — GET endpoint for session traces
+### @tracebug/server
+Independent Express API server. Contains:
+- Entry point: `src/index.ts` — Express app with CORS, JSON parsing
+- Routes: `src/routes/session.ts` — GET endpoint for session traces
 - Database: `src/db.ts` — MySQL connection pool and queries
+- Config: `src/config.ts` — loads `~/.tracebug/settings.json`
+
+### apps/web (Next.js)
+Next.js frontend using App Router. Two routes:
+- `/` — Landing page (enter share ID)
+- `/session?share_id=xxx` — Session trace view
+- Uses `@tracebug/ui` components, `next.config.ts` rewrites `/api/*` to Express server
 
 ## Configuration
 
@@ -82,10 +98,10 @@ Database config is loaded from `~/.tracebug/settings.json`:
 
 ## Testing
 
-Tests use **Vitest** (migrated from `node:test`). Test files use `*.test.ts` pattern.
+Tests use **Vitest**. Test files use `*.test.ts` pattern.
+- Server tests are in `server/tests/`
 - Integration tests set up a fresh MySQL database for each run
 - Tests use `beforeAll`/`afterAll` for database setup/teardown
-- Mock HTTP request/response objects for API testing
 
 ## Terminology
 
@@ -105,7 +121,7 @@ Tests use **Vitest** (migrated from `node:test`). Test files use `*.test.ts` pat
 
 ## When Working with Database
 
-The database layer is in `apps/web/src/db.ts`. It uses a singleton connection pool.
+The database layer is in `server/src/db.ts`. It uses a singleton connection pool.
 - Always release connections (handled by `getConnection()`/`release()` pattern)
 - The pool is reused across requests via `getPool()`
 - Tests create/drop a test database automatically

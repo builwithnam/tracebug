@@ -7,16 +7,15 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   nodePlugin.configs["flat/recommended"],
   {
-    files: ["src/server/**/*.ts", "tests/**/*.ts"],
+    files: ["src/**/*.ts", "tests/**/*.ts"],
     languageOptions: {
       parserOptions: {
-        project: "./tsconfig.eslint.json",
         tsconfigRootDir: import.meta.dirname,
       },
     },
     settings: {
       node: {
-        allowModules: ["mysql2", "open"],
+        allowModules: ["mysql2", "express", "cors"],
         tryExtensions: [".js", ".ts"],
       },
     },
@@ -34,6 +33,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["dist/**", "node_modules/**", "src/public/**", "src/frontend/**"],
+    ignores: ["dist/**", "node_modules/**"],
   },
 );

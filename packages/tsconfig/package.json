@@ -2,5 +2,8 @@
   "name": "@tracebug/tsconfig",
   "version": "0.0.0",
   "private": true,
-  "license": "MIT"
+  "license": "MIT",
+  "exports": {
+    "./tsconfig.json": "./tsconfig.json"
+  }
 }

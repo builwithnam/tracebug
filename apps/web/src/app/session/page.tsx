@@ -1,4 +1,7 @@
-import { useState } from "react";
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
 import type { SessionResponse, TraceResponse, ParsedStage } from "@tracebug/core";
 import {
   useCollapsibleContext,
@@ -15,12 +18,77 @@ import {
   type TimingBarEntry,
 } from "@tracebug/ui";
 
-interface SessionViewProps {
-  data: SessionResponse;
-  onBack: () => void;
+function SessionPageInner() {
+  const searchParams = useSearchParams();
+  const shareId = searchParams.get("share_id");
+
+  const [data, setData] = useState<SessionResponse | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!shareId) {
+      setError("No share ID provided");
+      setLoading(false);
+      return;
+    }
+
+    async function fetchSession() {
+      try {
+        const res = await fetch(`/api/session?share_id=${encodeURIComponent(shareId!)}`);
+        if (!res.ok) {
+          throw new Error(res.status === 404 ? "Session not found" : `Server error: ${res.status}`);
+        }
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load session");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSession();
+  }, [shareId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner className="w-8 h-8" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-sm text-destructive">{error}</p>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  return <SessionView data={data} />;
 }
 
-export function SessionView({ data, onBack }: SessionViewProps) {
+export default function SessionPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Spinner className="w-8 h-8" />
+        </div>
+      }
+    >
+      <SessionPageInner />
+    </Suspense>
+  );
+}
+
+/* ---------- Session View ---------- */
+
+function SessionView({ data }: { data: SessionResponse }) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const tracesMap = new Map(data.traces.map((t) => [t.id, t]));
@@ -30,9 +98,9 @@ export function SessionView({ data, onBack }: SessionViewProps) {
       {/* Header */}
       <header className="bg-card border-b border-border px-6 py-3 flex items-center gap-6 sticky top-0 z-100 max-sm:flex-col max-sm:items-start max-sm:gap-2">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack} title="New session" className="text-xl">
+          <a href="/" className="text-xl text-foreground hover:opacity-80">
             ←
-          </Button>
+          </a>
           <h1 className="text-lg font-medium tracking-tight text-foreground">tracebug</h1>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground ml-auto max-sm:ml-0 max-sm:flex-wrap">
@@ -121,7 +189,9 @@ function MessageCard({ message, trace, index, selected, onSelect }: MessageCardP
         "bg-card rounded-lg border border-border cursor-pointer transition-shadow duration-150 p-3.5 px-[18px] relative",
         "border-l-4",
         border,
-        selected ? [selectedBg, "border-l-[5px]", "shadow-[0_2px_10px_rgba(0,0,0,0.08)]"] : "shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
+        selected
+          ? [selectedBg, "border-l-[5px]", "shadow-[0_2px_10px_rgba(0,0,0,0.08)]"]
+          : "shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
       ].join(" ")}
     >
       {/* Header */}
@@ -136,7 +206,11 @@ function MessageCard({ message, trace, index, selected, onSelect }: MessageCardP
       <MessageText text={message.text} />
 
       {/* Trace Panel */}
-      {trace ? <TracePanel trace={trace} /> : <p className="text-xs text-muted-foreground italic py-2">No trace data available</p>}
+      {trace ? (
+        <TracePanel trace={trace} />
+      ) : (
+        <p className="text-xs text-muted-foreground italic py-2">No trace data available</p>
+      )}
     </div>
   );
 }
@@ -278,7 +352,11 @@ function SummaryGrid({ summary }: { summary: Record<string, unknown> }) {
           </div>
           <div
             className="text-[13px] text-foreground truncate max-w-[500px] hover:whitespace-normal hover:break-all max-sm:max-w-[300px]"
-            title={typeof value === "object" && value !== null ? JSON.stringify(value) : String(value)}
+            title={
+              typeof value === "object" && value !== null
+                ? JSON.stringify(value)
+                : String(value)
+            }
           >
             {formatSummaryValue(value)}
           </div>

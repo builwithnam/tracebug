@@ -1,7 +1,4 @@
 packages:
   - apps/*
   - packages/*
-
-approveBuildsFor: esbuild
-
-onlyBuiltDependencies: esbuild
+  - server

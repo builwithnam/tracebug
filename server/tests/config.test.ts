@@ -29,7 +29,7 @@ describe("config loading", () => {
       }),
     );
 
-    const { loadConfig } = await import("../src/server/config.js");
+    const { loadConfig } = await import("../src/config.js");
     const config = loadConfig();
     expect(config.db.host).toBe("localhost");
     expect(config.db.port).toBe(3306);
@@ -40,7 +40,7 @@ describe("config loading", () => {
       fs.unlinkSync(CONFIG_PATH);
     }
 
-    const { loadConfig } = await import("../src/server/config.js");
+    const { loadConfig } = await import("../src/config.js");
     expect(() => loadConfig()).toThrow(/Config not found/);
   });
 
@@ -48,7 +48,7 @@ describe("config loading", () => {
     fs.mkdirSync(CONFIG_DIR, { recursive: true });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify({ port: 3000 }));
 
-    const { loadConfig } = await import("../src/server/config.js");
+    const { loadConfig } = await import("../src/config.js");
     expect(() => loadConfig()).toThrow(/missing 'db' field/);
   });
 });

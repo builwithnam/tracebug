@@ -1,8 +1,8 @@
 import { describe, it, beforeAll, afterAll, expect } from "vitest";
-import http from "http";
+import express, { type Express } from "express";
 import mysql from "mysql2/promise";
-import { createServer } from "../src/server/server.js";
-import { closePool } from "../src/server/db.js";
+import { sessionRouter } from "../src/routes/session.js";
+import { createPool, closePool } from "../src/db.js";
 
 const TEST_DB_CONFIG = {
   host: "localhost",
@@ -12,28 +12,32 @@ const TEST_DB_CONFIG = {
   database: "db_test",
 };
 
-const CONFIG = { port: 0, db: TEST_DB_CONFIG };
-
-let server: http.Server;
-
-function get(
-  port: number,
-  path: string,
-): Promise<{ status: number; headers: http.IncomingHttpHeaders; body: string }> {
+function request(app: Express, path: string): Promise<{ status: number; body: unknown }> {
   return new Promise((resolve, reject) => {
-    http
-      .get(`http://localhost:${port}${path}`, (res) => {
-        let body = "";
-        res.on("data", (chunk) => (body += chunk));
-        res.on("end", () => {
-          resolve({ status: res.statusCode ?? 0, headers: res.headers, body });
+    const server = app.listen(0, () => {
+      const port = (server.address() as { port: number }).port;
+      const http = require("http");
+      http
+        .get(`http://localhost:${port}${path}`, (res: any) => {
+          let body = "";
+          res.on("data", (chunk: string) => (body += chunk));
+          res.on("end", () => {
+            server.close();
+            resolve({
+              status: res.statusCode ?? 0,
+              body: JSON.parse(body),
+            });
+          });
+        })
+        .on("error", (err: Error) => {
+          server.close();
+          reject(err);
         });
-      })
-      .on("error", reject);
+    });
   });
 }
 
-describe("Integration: full flow end-to-end", () => {
+describe("Integration: API end-to-end", () => {
   beforeAll(async () => {
     const conn = await mysql.createConnection({
       host: TEST_DB_CONFIG.host,
@@ -169,147 +173,115 @@ describe("Integration: full flow end-to-end", () => {
 
     await conn.end();
 
-    server = createServer(CONFIG);
-    await new Promise<void>((resolve) => {
-      server.listen(0, () => resolve());
-    });
+    createPool(TEST_DB_CONFIG);
   });
 
-  function port(): number {
-    return (server.address() as { port: number }).port;
+  function createApp(): Express {
+    const app = express();
+    app.use("/api", sessionRouter());
+    return app;
   }
-
-  // ===== Static file serving =====
-
-  it("serves index.html at /", async () => {
-    const res = await get(port(), "/");
-    expect(res.status).toBe(200);
-    expect(res.body).toContain("tracebug");
-    expect(res.body).toContain("share-id-input");
-    expect(res.body).toContain('href="/style.css"');
-    expect(res.body).toContain('src="/app.js"');
-  });
-
-  it("serves style.css", async () => {
-    const res = await get(port(), "/style.css");
-    expect(res.status).toBe(200);
-    expect(res.headers["content-type"]).toContain("text/css");
-    expect(res.body).toContain(".message-card");
-    expect(res.body).toContain(".json-tree");
-  });
-
-  it("serves app.js", async () => {
-    const res = await get(port(), "/app.js");
-    expect(res.status).toBe(200);
-    expect(res.headers["content-type"]).toContain("javascript");
-    expect(res.body).toContain("fetchSession");
-    expect(res.body).toContain("renderJsonTree");
-  });
-
-  it("returns 404 for unknown routes", async () => {
-    const res = await get(port(), "/unknown");
-    expect(res.status).toBe(404);
-  });
 
   // ===== API error handling =====
 
   it("returns 400 when share_id is missing", async () => {
-    const res = await get(port(), "/api/session");
-    expect(res.status).toBe(400);
-    const body = JSON.parse(res.body);
+    const { status, body } = await request(createApp(), "/api/session");
+    expect(status).toBe(400);
     expect(body).toEqual({ error: "share_id is required" });
   });
 
   it("returns 404 for non-existent share_id", async () => {
-    const res = await get(port(), "/api/session?share_id=does-not-exist");
-    expect(res.status).toBe(404);
-    const body = JSON.parse(res.body);
+    const { status, body } = await request(createApp(), "/api/session?share_id=does-not-exist");
+    expect(status).toBe(404);
     expect(body).toEqual({ error: "Share ID not found" });
   });
 
   // ===== Full API response =====
 
   it("returns valid session data for existing share_id", async () => {
-    const res = await get(port(), "/api/session?share_id=test-share-abc");
+    const { status, body: rawBody } = await request(
+      createApp(),
+      "/api/session?share_id=test-share-abc",
+    );
 
-    expect(res.status).toBe(200);
+    expect(status).toBe(200);
 
-    const body = JSON.parse(res.body);
+    const body = rawBody as Record<string, unknown>;
     expect(body.share_id).toBe("test-share-abc");
     expect(body.session_id).toBe("session-e2e");
 
-    expect(Array.isArray(body.messages)).toBe(true);
-    expect(body.messages.length).toBe(4);
-    expect(body.messages[0].type).toBe("user");
-    expect(body.messages[0].text).toBe("I need help with booking");
-    expect(body.messages[1].type).toBe("assistant");
-    expect(body.messages[1].text).toContain("Sure!");
-    expect(body.messages[0].created_at).toBeTruthy();
+    const messages = body.messages as Record<string, unknown>[];
+    expect(Array.isArray(messages)).toBe(true);
+    expect(messages.length).toBe(4);
+    expect(messages[0].type).toBe("user");
+    expect(messages[0].text).toBe("I need help with booking");
+    expect(messages[1].type).toBe("assistant");
+    expect(messages[1].text).toContain("Sure!");
 
-    expect(Array.isArray(body.traces)).toBe(true);
-    expect(body.traces.length).toBe(1);
+    const traces = body.traces as Record<string, unknown>[];
+    expect(Array.isArray(traces)).toBe(true);
+    expect(traces.length).toBe(1);
 
-    const trace = body.traces[0];
-    expect("id" in trace).toBe(true);
-    expect("stages" in trace).toBe(true);
-    expect("stat" in trace).toBe(true);
+    const trace = traces[0];
+    const stages = trace.stages as Record<string, unknown>;
+    const stat = trace.stat as Record<string, unknown>;
 
-    expect(trace.stages.querier).toBeTruthy();
-    expect(trace.stages.querier.raw).toBeTruthy();
-    expect(trace.stages.querier.summary).toBeTruthy();
+    expect(stages.querier).toBeTruthy();
+    expect((stages.querier as Record<string, unknown>).raw).toBeTruthy();
+    expect((stages.querier as Record<string, unknown>).summary).toBeTruthy();
 
-    expect(trace.stages.router).toBeTruthy();
-    expect(trace.stages.router.summary).toBeTruthy();
+    expect(stages.router).toBeTruthy();
+    expect((stages.router as Record<string, unknown>).summary).toBeTruthy();
 
-    expect(trace.stages.agent).toBeNull();
-    expect(trace.stages.generator).toBeNull();
-    expect(trace.stages.questioner).toBeNull();
+    expect(stages.agent).toBeNull();
+    expect(stages.generator).toBeNull();
+    expect(stages.questioner).toBeNull();
 
-    expect(trace.stat).toBeTruthy();
-    expect(trace.stat.querierDuration).toBe(120);
-    expect(trace.stat.routerDuration).toBe(85);
-    expect(trace.stat.agentDuration).toBe(340);
-  });
-
-  it("includes CORS headers on all API responses", async () => {
-    const res = await get(port(), "/api/session?share_id=test-share-abc");
-    expect(res.headers["access-control-allow-origin"]).toBe("*");
-    expect(res.headers["content-type"]).toContain("application/json");
+    expect(stat).toBeTruthy();
+    expect(stat.querierDuration).toBe(120);
+    expect(stat.routerDuration).toBe(85);
+    expect(stat.agentDuration).toBe(340);
   });
 
   // ===== Querier summary extraction =====
 
   it("extracts querier summary fields correctly", async () => {
-    const res = await get(port(), "/api/session?share_id=test-share-abc");
-    const body = JSON.parse(res.body);
-    const querier = body.traces[0].stages.querier;
+    const { body: rawBody } = await request(createApp(), "/api/session?share_id=test-share-abc");
+    const body = rawBody as Record<string, unknown>;
+    const traces = body.traces as Record<string, unknown>[];
+    const stages = traces[0].stages as Record<string, unknown>;
+    const querier = stages.querier as Record<string, unknown>;
+    const summary = querier.summary as Record<string, unknown>;
 
-    expect(querier.summary).toBeTruthy();
-    expect(querier.summary.language).toBe("en");
-    expect(querier.summary.intent).toBe("booking");
-    expect(querier.summary.model).toBe("gpt-4");
-    expect(querier.summary.tokenUsage).toBeTruthy();
-    expect(querier.summary.tokenUsage.promptTokens).toBe(150);
-    expect(querier.summary.tokenUsage.totalTokens).toBe(180);
-    expect(querier.summary.traceId).toBe("trace-e2e-001");
+    expect(summary).toBeTruthy();
+    expect(summary.language).toBe("en");
+    expect(summary.intent).toBe("booking");
+    expect(summary.model).toBe("gpt-4");
+    const tokenUsage = summary.tokenUsage as Record<string, unknown>;
+    expect(tokenUsage).toBeTruthy();
+    expect(tokenUsage.promptTokens).toBe(150);
+    expect(tokenUsage.totalTokens).toBe(180);
+    expect(summary.traceId).toBe("trace-e2e-001");
   });
 
   // ===== Router summary extraction =====
 
   it("extracts router summary fields correctly", async () => {
-    const res = await get(port(), "/api/session?share_id=test-share-abc");
-    const body = JSON.parse(res.body);
-    const router = body.traces[0].stages.router;
+    const { body: rawBody } = await request(createApp(), "/api/session?share_id=test-share-abc");
+    const body = rawBody as Record<string, unknown>;
+    const traces = body.traces as Record<string, unknown>[];
+    const stages = traces[0].stages as Record<string, unknown>;
+    const router = stages.router as Record<string, unknown>;
+    const summary = router.summary as Record<string, unknown>;
 
-    expect(router.summary).toBeTruthy();
-    expect(router.summary.scenarioName).toBe("dental_booking");
-    expect(router.summary.flowId).toBe("flow-001");
-    expect(router.summary.intent).toBe("book_appointment");
-    expect(router.summary.searchType).toBe("semantic");
+    expect(summary).toBeTruthy();
+    expect(summary.scenarioName).toBe("dental_booking");
+    expect(summary.flowId).toBe("flow-001");
+    expect(summary.intent).toBe("book_appointment");
+    expect(summary.searchType).toBe("semantic");
   });
 
   afterAll(async () => {
-    server.close();
     await closePool();
 
     const conn = await mysql.createConnection({

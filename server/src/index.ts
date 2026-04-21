@@ -1,23 +1,22 @@
-#!/usr/bin/env node
-
-import { createServer } from "./server.js";
+import express from "express";
+import cors from "cors";
 import { loadConfig } from "./config.js";
-import open from "open";
-import { closePool } from "./db.js";
+import { createPool, closePool } from "./db.js";
+import { sessionRouter } from "./routes/session.js";
 
 async function main() {
   const config = loadConfig();
   const port = config.port ?? 3000;
+  createPool(config.db);
 
-  const server = createServer(config);
+  const app = express();
+  app.use(cors());
+  app.use(express.json());
+  app.use("/api", sessionRouter());
 
-  server.listen(port, () => {
-    const url = `http://localhost:${port}`;
+  const server = app.listen(port, () => {
     console.log("Loaded config:", JSON.stringify(config));
-    console.log(`tracebug running at ${url}`);
-    open(url).catch(() => {
-      console.log(`Open your browser at ${url}`);
-    });
+    console.log(`tracebug API running at http://localhost:${port}`);
   });
 
   const shutdown = async () => {

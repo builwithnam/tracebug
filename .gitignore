@@ -8,4 +8,4 @@ dist/
 tests/*.js
 tests/*.d.ts
 .turbo/
-dist/public/
+.next/
