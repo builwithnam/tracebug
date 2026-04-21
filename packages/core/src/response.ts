@@ -46,15 +46,15 @@ export function messageToResponse(msg: Message): MessageResponse {
 export function groupTracesByMessageId(traces: MessageData[]): TraceResponse[] {
   if (traces.length === 0) return [];
 
-  // All traces share the same session_id; group them all into one trace entry
-  // since there's no message_id foreign key to link individual traces to messages.
-  const parsed = parseAllStages(traces);
-  return [
-    {
-      id: traces[0].id,
-      created_at: traces[0].created_at?.toISOString() ?? null,
+  // Each message_data record has an 'id' which is the message_id it belongs to.
+  // Return one trace entry per message_data record.
+  return traces.map((trace) => {
+    const parsed = parseAllStages([trace]);
+    return {
+      id: trace.id,
+      created_at: trace.created_at?.toISOString() ?? null,
       stages: parsed.stages,
       stat: parsed.stat as unknown as Record<string, number | null> | null,
-    },
-  ];
+    };
+  });
 }

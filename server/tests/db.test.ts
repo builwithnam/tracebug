@@ -44,9 +44,16 @@ describe("database pool", () => {
       CREATE TABLE message (
         id INT AUTO_INCREMENT PRIMARY KEY,
         session_id VARCHAR(255) NOT NULL,
-        role VARCHAR(50) NOT NULL,
-        content TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        type VARCHAR(50) NOT NULL,
+        text TEXT,
+        code VARCHAR(255),
+        feedback_type VARCHAR(255),
+        referer_id INT,
+        quick_replies TEXT,
+        buttons TEXT,
+        metadata JSON,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
 
@@ -54,9 +61,16 @@ describe("database pool", () => {
       CREATE TABLE message_data (
         id INT AUTO_INCREMENT PRIMARY KEY,
         session_id VARCHAR(255) NOT NULL,
-        stage VARCHAR(100) NOT NULL,
-        payload JSON,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        user_journey JSON,
+        querier JSON,
+        router JSON,
+        scenario_selector JSON,
+        agent JSON,
+        generator JSON,
+        questioner JSON,
+        stat JSON,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
 
@@ -65,28 +79,38 @@ describe("database pool", () => {
       "session-abc",
     ]);
 
-    await dbConn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+    await dbConn.execute("INSERT INTO message (session_id, type, text) VALUES (?, ?, ?)", [
       "session-abc",
       "user",
       "Hello",
     ]);
 
-    await dbConn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+    await dbConn.execute("INSERT INTO message (session_id, type, text) VALUES (?, ?, ?)", [
       "session-abc",
       "assistant",
       "Hi there!",
     ]);
 
-    await dbConn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
+    // First user message trace
+    await dbConn.execute("INSERT INTO message_data (id, session_id, querier, router) VALUES (?, ?, ?, ?)", [
+      1,
       "session-abc",
-      "querier",
-      JSON.stringify({ intent: "greeting" }),
+      JSON.stringify({ message: { kwargs: { additional_kwargs: { context: { traceId: "trace-1" } }, response_metadata: { model_name: "gpt-4", tokenUsage: { totalTokens: 100 } } } } }),
+      JSON.stringify({ message: { kwargs: { additional_kwargs: { context: { scenarioName: "greeting" } } } } }),
     ]);
 
-    await dbConn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
+    // Second user message trace
+    await dbConn.execute("INSERT INTO message (session_id, type, text) VALUES (?, ?, ?)", [
       "session-abc",
-      "router",
-      JSON.stringify({ scenario: "greeting" }),
+      "user",
+      "How are you?",
+    ]);
+
+    await dbConn.execute("INSERT INTO message_data (id, session_id, querier, router) VALUES (?, ?, ?, ?)", [
+      3,
+      "session-abc",
+      JSON.stringify({ message: { kwargs: { additional_kwargs: { context: { traceId: "trace-2" } }, response_metadata: { model_name: "gpt-4", tokenUsage: { totalTokens: 150 } } } } }),
+      JSON.stringify({ message: { kwargs: { additional_kwargs: { context: { scenarioName: "chitchat" } } } } }),
     ]);
 
     await dbConn.end();
@@ -100,12 +124,16 @@ describe("database pool", () => {
     expect(result!.share_id).toBe("test-share-123");
     expect(result!.session_id).toBe("session-abc");
     expect(Array.isArray(result!.messages)).toBe(true);
-    expect(result!.messages.length).toBe(2);
+    expect(result!.messages.length).toBe(3);
     expect(result!.messages[0].type).toBe("user");
     expect(result!.messages[0].text).toBe("Hello");
+    expect(result!.messages[1].type).toBe("assistant");
+    expect(result!.messages[2].type).toBe("user");
+    expect(result!.messages[2].text).toBe("How are you?");
     expect(Array.isArray(result!.traces)).toBe(true);
     expect(result!.traces.length).toBe(2);
-    expect(result!.traces[0].querier).toBe("querier");
+    expect(result!.traces[0].id).toBe(1);
+    expect(result!.traces[1].id).toBe(3);
   });
 
   it("should return null for non-existent share_id", async () => {
