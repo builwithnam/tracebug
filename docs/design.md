@@ -334,6 +334,9 @@ Pipeline visualization:
 - Inactive stage: Warm sand background, Stone Gray text
 - Stages connected by `→` arrows
 - Gap: 8px
+- Padding: `px-5 py-2`
+- Font: 12px sans-serif, medium weight (500)
+- Border radius: 6px
 
 ### 9.5 Timing Bars
 
