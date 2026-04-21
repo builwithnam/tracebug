@@ -1,62 +1,84 @@
-# Tracebug Design System
+# Tracebug Design System — Claude-Inspired "Technical Manuscript"
 
 This document defines Tracebug's visual language and interaction specifications. All UI development must follow these standards.
+
+The interface treats pipeline traces as a kind of literary code documentation on parchment — warm, unhurried, and quietly intellectual.
 
 ---
 
 ## 1. Design Philosophy
 
-Tracebug is an **AI pipeline tracing and debugging tool** — developers use it in production to quickly locate the inputs/outputs and performance bottlenecks at each stage of a chatbot pipeline. Three core principles:
+Tracebug is an **AI pipeline tracing and debugging tool** — developers use it in production to quickly locate inputs/outputs and performance bottlenecks at each stage of a chatbot pipeline. Inspired by Claude's warm, editorial aesthetic:
 
-1. **Restraint is sophistication.** Default to subtraction. A debugging tool should let data speak, not distract with decoration. Superfluous dividers, decorative icons, and "just in case" hint text are noise. Whitespace itself is design.
-2. **Hierarchy through grayscale, color as signal.** The interface is predominantly neutral. Color appears only to convey semantics (message type, pipeline stage status, errors). If two areas compete for attention, the solution is to push one back — not color both.
-3. **Consistency over individuality.** Similar interactions must have identical visual feedback. A hover effect should "feel the same" across message cards, stage sections, and buttons.
+1. **Restraint is sophistication.** Default to subtraction. A debugging tool should let data speak, not distract with decoration. Whitespace itself is design. Superfluous dividers, decorative icons, and "just in case" hint text are noise.
+
+2. **Warmth through consistency.** Every color has a yellow-brown undertone — no cool blues, no pure blacks. The palette feels lived-in and trustworthy, like a well-used notebook.
+
+3. **Editorial hierarchy.** Serif headlines (Georgia) carry gravitas, while sans-serif UI elements serve utility with quiet efficiency. Generous line-height (1.60) creates a reading experience closer to a book than a dashboard.
+
+4. **Color as signal, not decoration.** The interface is predominantly neutral. Terracotta appears only for primary CTAs and brand moments. Semantic colors (user/assistant/system) are warm, earthy variants.
 
 ---
 
 ## 2. Color System
 
-Currently using CSS custom properties. When migrating to shadcn tokens, the following semantics must be preserved.
+Using OKLCh color space via CSS custom properties. All colors have warm undertones.
 
-### 2.1 Neutral Scale
+### 2.1 Neutral Scale — Warm Tones Only
 
-90% of the interface is neutral. Grayscale levels convey information hierarchy:
+95% of interface is neutral with yellow-brown undertones:
 
-| Role | Current Value | Usage |
-|------|--------------|-------|
-| Page background | `#f5f5f5` | Page base color |
-| Card / container | `#fff` | Message cards, stage sections, landing card |
-| Secondary surface | `#fafafa` / `#f3f4f6` | Stage header background, hover backgrounds |
-| Border | `#e5e7eb` | Dividers, input borders, card borders |
-| Primary text | `#333` / `#111` | Headings, body text |
-| Secondary text | `#6b7280` | Descriptions, metadata, badges |
-| Lightest text | `#9ca3af` | Timestamps, summary keys, placeholders |
+| Role | OKLCh | Hex | Usage |
+|------|-------|-----|-------|
+| Parchment background | `oklch(0.96 0.01 85)` | `#f5f4ed` | Primary page background |
+| Ivory card | `oklch(0.98 0.008 85)` | `#faf9f5` | Message cards, containers |
+| Warm sand | `oklch(0.92 0.012 85)` | `#e8e6dc` | Secondary backgrounds, buttons |
+| Border cream | `oklch(0.93 0.01 85)` | `#f0eee6` | Standard borders |
+| Border warm | `oklch(0.88 0.015 85)` | `#e8e6dc` | Prominent borders, dividers |
+| Dark surface | `oklch(0.20 0.01 70)` | `#30302e` | Dark containers |
+| Deep dark | `oklch(0.10 0.008 70)` | `#141413` | Dark theme background |
 
-**Rule:** Within a single screen, text color should use at most 3 levels (`#333` / `#6b7280` / `#9ca3af` or one semantic color). More than 3 levels indicates a hierarchy problem.
+**Text Colors — All Warm:**
 
-### 2.2 Semantic Colors
+| Role | OKLCh | Hex | Usage |
+|------|-------|-----|-------|
+| Near black | `oklch(0.10 0.01 70)` | `#141413` | Primary text, headlines |
+| Olive gray | `oklch(0.38 0.015 70)` | `#5e5d59` | Secondary body text |
+| Stone gray | `oklch(0.55 0.02 65)` | `#87867f` | Tertiary text, footnotes |
+| Charcoal warm | `oklch(0.32 0.012 70)` | `#4d4c48` | Button text |
+| Warm silver | `oklch(0.70 0.015 85)` | `#b0aea5` | Text on dark surfaces |
 
-Color is only used to convey meaning, never decoration:
+**Rule:** No cool blue-grays anywhere. Every gray must have a yellow-brown undertone. Within a single screen, text color should use at most 3 levels.
 
-| Value | Meaning | Usage |
-|-------|---------|-------|
-| `#3b82f6` (blue) | User messages, pipeline active state | `user` type message left border, badge, active pipeline pill, timing bar, links |
-| `#10b981` (green) | Assistant messages, success | `assistant` type message left border, badge, JSON strings |
-| `#6b7280` (gray) | System messages, neutral state | `system` type message left border, badge, default pipeline pill |
-| `#ef4444` (red) | Error / danger | Error text, summary errors, landing errors |
-| `#2563eb` (dark blue) | Interactive emphasis | Button hover, JSON numbers |
-| `#9333ea` (purple) | Data markers | JSON booleans |
+### 2.2 Brand & Semantic Colors
+
+| Role | OKLCh | Hex | Usage |
+|------|-------|-----|-------|
+| Terracotta brand | `oklch(0.52 0.12 35)` | `#c96442` | Primary CTAs, brand moments |
+| Coral accent | `oklch(0.58 0.12 35)` | `#d97757` | Text highlights |
+| User messages | `oklch(0.58 0.08 45)` | Warm amber-brown | User type badges, borders |
+| Assistant messages | `oklch(0.52 0.12 35)` | Terracotta | Assistant type badges, borders |
+| System messages | `oklch(0.42 0.015 70)` | Dark charcoal | System type badges, borders |
+| Error crimson | `oklch(0.45 0.12 25)` | `#b53333` | Error states |
+| Muted green | `oklch(0.55 0.08 145)` | Success states |
+| Muted blue-green | `oklch(0.58 0.12 210)` | JSON strings |
+| Muted teal | `oklch(0.58 0.14 210)` | JSON numbers |
 
 **Rules:**
-- Semantic colors are for small-area elements (badges, left borders, icons, timing bars). Large-area fills use 10% opacity variants (e.g., `selected` state: `#f0f7ff` / `#eff6ff` / `#ecfdf5`).
+- Semantic colors are for small-area elements (badges, left borders, timing bars). Large-area fills use 5-10% opacity variants.
+- Terracotta is reserved for primary CTAs and highest-signal brand moments only.
 - No more than 2–3 semantic colors should appear simultaneously on any single screen.
 
-### 2.3 Dark Mode
+### 2.3 Focus & Ring Colors
 
-Currently not supported. When implemented:
-- Background should use dark gray, not pure black — pure black is harsh on LCD screens.
-- Borders should use white at low opacity (e.g., `rgba(255,255,255,0.1)`), more subtle than light mode.
-- Semantic colors should be lightened to ensure contrast.
+| Role | OKLCh | Hex | Usage |
+|------|-------|-----|-------|
+| Focus blue | `oklch(0.58 0.14 230)` | `#3898ec` | Input focus rings (only cool color for accessibility) |
+| Ring warm | `oklch(0.70 0.02 85)` | `#d1cfc5` | Hover/focus rings on buttons, cards |
+| Ring subtle | `oklch(0.85 0.015 85)` | Lighter ring variant |
+| Ring deep | `oklch(0.65 0.025 85)` | `#c2c0b6` | Active/pressed states |
+
+**Rule:** The only cool color in the entire system is Focus Blue (`#3898ec`), used purely for keyboard accessibility on input focus states.
 
 ---
 
@@ -66,176 +88,178 @@ Currently not supported. When implemented:
 
 | Role | Font | Usage |
 |------|------|-------|
-| Body / UI | System font stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, ...`) | Default for all interface text |
-| Code / Data | Monospace stack (`"SF Mono", "Cascadia Code", "Fira Code", "Consolas", monospace`) | JSON tree, IDs, timestamps, monospaced data |
+| Headlines | `Georgia, "Times New Roman", Times, serif` | All headings, titles — editorial gravitas |
+| Body / UI | `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif` | Default for all interface text, buttons, labels |
+| Code / Data | `"SF Mono", "Cascadia Code", "Fira Code", Consolas, ui-monospace, monospace` | JSON tree, IDs, timestamps, monospaced data |
 
-Font stacks are declared in `body` and `.json-tree` selectors.
+**Principles:**
+- Serif for authority (headlines), sans for utility (UI).
+- Monospace strictly for code/data — never for non-code content.
 
 ### 3.2 Font Size Discipline
 
-**The entire project uses only 3 core sizes:**
-
 | Size | Role | Usage |
 |------|------|-------|
-| 16px | Page titles, emphasis | Landing title, input fields, primary button text |
-| 14px (13–15px) | Default | Main interface font — message body, stage names, forms, landing subtitle |
-| 12px (11px) | Auxiliary | Badge text, timestamps, timing labels/values, summary keys, pipeline pills |
-
-**Current implementation mapping:**
-
-| CSS Declaration | Size | Element |
-|-----------------|------|---------|
-| `font-size: 32px` | Landing title | `.landing-title` (only large text element) |
-| `font-size: 18px` | Session title | `.session-title` |
-| `font-size: 16px` | Form inputs | `.landing-input`, `.landing-btn` |
-| `font-size: 15px` | Landing subtitle | `.landing-subtitle` |
-| `font-size: 14px` | Body text | `.message-text`, `.stage-name`, `.session-error`, `.landing-error` |
-| `font-size: 13px` | Metadata | `.session-meta-value`, `.summary-value` |
-| `font-size: 12px` | Auxiliary labels | `.message-timestamp`, `.pipeline-pill`, `.timing-label`, `.timing-value`, `.summary-key`, `.json-tree`, `.stage-duration-badge`, `.trace-empty` |
-| `font-size: 11px` | Smallest labels | `.message-type-badge`, `.session-meta-label`, `.json-tree-toggle` |
+| 48px (3rem) | Landing hero | Only large heading — serif |
+| 20px (1.25rem) | Page headings | Session header, card titles — serif |
+| 16px (1rem) | Default | Main interface — message body, form inputs |
+| 14px (0.88rem) | Body large | Landing subtitle, descriptions |
+| 13px (0.81rem) | Metadata | Summary values, session meta |
+| 12px (0.75rem) | Auxiliary | Badges, timestamps, labels |
+| 10px (0.63rem) | Overline | Section labels, metadata keys — uppercase, tracked |
 
 **Rules:**
-- Aside from the landing page title (`32px`), the interface should not use sizes above `18px`. Debugging tools prioritize information density.
+- Aside from landing hero (48px), interface should not use sizes above 20px.
 - No more than 2 font sizes per block. If a 3rd size seems necessary, try `font-weight` or color first.
 
 ### 3.3 Font Weight
 
-Only two weights:
-
 | Weight | Usage |
 |--------|-------|
-| `font-weight: 400` (normal) | Body text, descriptions, most text |
-| `font-weight: 500–600` (medium/semibold) | Labels, badges, buttons, stage names, headings |
+| `400` (normal) | Body text, descriptions, serif headings |
+| `500` (medium) | Labels, badges, sans-serif buttons, small text |
 
-**Note:** The current implementation uses `font-weight: 600` for `.landing-btn` and `.stage-name`, and `font-weight: 700` for `.landing-title`. In future iterations, the landing title's `700` should be reduced to `500` to maintain the tool's overall "light" feel.
+**Rules:**
+- Single weight for serifs (400/normal) — no bold, no light. Creates consistent "voice."
+- Sans-serif uses 400 or 500 — never 600 or 700.
+
+### 3.4 Line Height & Letter Spacing
+
+| Element | Line Height | Letter Spacing |
+|---------|--------------|----------------|
+| Serif headings | 1.10 – 1.20 (tight) | Normal |
+| Body text | 1.60 (relaxed) | Normal |
+| Code | 1.60 | -0.01em |
+| Labels/badges (≤12px) | 1.25 – 1.60 | 0.1em |
+
+**Principles:**
+- Generous body line-height (1.60) creates literary reading experience.
+- Tight heading line-heights (1.10–1.20) feel editorial, not cramped.
+- Letter-spacing on small labels (0.1em) maintains readability at tiny sizes.
 
 ---
 
 ## 4. Spacing System
 
-Based on a 4px grid. Spacing conveys information — it tells the user "what belongs with what."
+Based on an 8px grid. Spacing conveys information — it tells the user "what belongs with what."
 
 ### 4.1 Spacing Semantics
 
-| Spacing | Meaning | Current Usage |
-|---------|---------|---------------|
-| 4px | **Tight association** | Icon with text, badge with meta |
-| 6px | **Within component** | Between pipeline pills, timing row `margin-bottom`, summary grid `gap` |
-| 8px | **Same group, different items** | `.message-header` gap, session-meta gap, stage-header gap, timing row gap |
-| 12px | **Within section** | Landing form gap, timeline gap, trace-panel `margin-top` |
-| 14–18px | **Card interior** | Message-card padding `14px 18px`, stage-body padding `14px` |
-| 24px | **Between sections** | Timeline padding, session-header padding, loading padding |
-| 40–48px | **Page level** | Landing-card padding `48px 40px` |
-
-**Rule:** Dividers (`border-top`) are only for semantically clear content separation (e.g., trace-panel vs. message body, stage header vs. stage body). If spacing alone works, don't add a divider.
+| Spacing | Meaning | Usage |
+|---------|---------|-------|
+| 4px | Tight association | Badge with meta, icon with text |
+| 6px | Within component | Between pipeline pills, summary grid gap |
+| 8px | Same group, different items | Message header gap, session meta gap |
+| 12px | Within section | Timeline gap, trace-panel margin |
+| 16px | Card interior | Message-card padding |
+| 20px | Form gap | Landing form gap |
+| 24px | Between sections | Session-header padding, loading padding |
+| 32px – 40px | Page level | Landing-card padding |
 
 ### 4.2 Container Strategy (by priority)
 
 When visually separating two areas:
 
-1. **Spacing only** — increase the gap (preferred, e.g., timeline `gap: 12px` between cards)
-2. **Background color change** — one area gets a different base (e.g., `.stage-header` uses `#fafafa`)
-3. **Single divider** — a thin `border-top: 1px solid #e5e7eb` (e.g., `.trace-panel`)
-4. **Full card** — border + radius + padding + shadow (heaviest, e.g., `.message-card`)
+1. **Spacing only** — increase gap (preferred)
+2. **Background color change** — one area gets different base
+3. **Single divider** — thin border-top (`1px solid Border Cream`)
+4. **Full card** — border + radius + padding + shadow (heaviest)
 
-Use the lightest tool to achieve separation.
+Use lightest tool to achieve separation.
 
 ---
 
-## 5. Interaction States
+## 5. Border Radius — Soft & Approachable
 
-### 5.1 State Hierarchy
+| Value | Usage |
+|-------|-------|
+| 6px | Subtly rounded — small buttons, secondary elements |
+| 8px | Comfortably rounded — standard buttons, cards, containers |
+| 12px | Generously rounded — primary buttons, inputs |
+| 16px | Very rounded — featured containers, video players |
+| 999px | Full — pills, circular elements |
+
+**Principle:** Soft corners (8-12px) create approachable, human-scale feel. No sharp edges (<6px).
+
+---
+
+## 6. Depth & Elevation
+
+Depth comes from warm-toned ring shadows, not traditional drop shadows.
+
+| Level | Treatment | Use |
+|-------|-----------|-----|
+| Flat (Level 0) | No shadow, no border | Parchment background, inline text |
+| Contained (Level 1) | `1px solid Border Cream` | Standard cards, sections |
+| Ring (Level 2) | `0px 0px 0px 1px` ring shadows | Interactive cards, buttons, hover states |
+| Whisper (Level 3) | `rgba(0,0,0,0.03) 0px 4px 24px` | Elevated cards, content islands |
+| Inset (Level 4) | `inset 0px 0px 0px 1px` at 15% opacity | Active/pressed buttons |
+
+**Shadow Philosophy:** Ring shadows (`0px 0px 0px 1px`) create a border-like halo that's softer than an actual border. Drop shadows are extremely soft (0.03 opacity) — barely visible lifts.
+
+---
+
+## 7. Interaction States
+
+### 7.1 State Hierarchy
 
 ```
 Rest → Hover → Selected → Focused → Disabled
 ```
 
-### 5.2 Hover State
+### 7.2 Hover State
 
 Hover says "I notice you" — visual changes should be subtle and immediate:
 
-| Element | Hover Effect | Implementation |
-|---------|-------------|----------------|
-| Message card | Shadow deepens | `box-shadow: 0 2px 8px rgba(0,0,0,0.08)` (from `0 1px 3px 0.04`) |
-| Back button | Light gray bg + darker text | `background: #f3f4f6; color: #333` |
-| Stage header | Background deepens | `background: #f3f4f6` (from `#fafafa`) |
-| Primary button | Background deepens | `background: #2563eb` (from `#3b82f6`) |
-| JSON toggle | Underline appears | `text-decoration: underline` |
+| Element | Hover Effect |
+|---------|-------------|
+| Message card | Shadow deepens, background warms slightly |
+| Back button | Text color shifts to terracotta, underline appears |
+| Stage header | Background deepens to warm sand |
+| Primary button (terracotta) | Background darkens (`oklch(0.48 0.11 35)`) |
+| Secondary button | Background darkens to border warm |
+| JSON toggle | Underline appears |
 
 **Rules:**
 - No size changes on hover (no `scale`).
-- Hover visual changes must always be lighter than selected. Users should distinguish "hovering" from "selected."
-- All hovers use `transition: 0.15s`.
+- Hover visual changes must always be lighter than selected.
+- All hovers use `transition: 200ms` (slower, more deliberate).
 
-### 5.3 Selected State
+### 7.3 Selected State
 
 Selected says "I am chosen" — visually heavier than hover:
 
 | Element | Selected Effect |
 |---------|----------------|
-| Message card (user) | Background `#eff6ff` + left border thickened to `5px` + shadow enhanced |
-| Message card (assistant) | Background `#ecfdf5` + left border thickened to `5px` + shadow enhanced |
-| Message card (default) | Background `#f0f7ff` + left border thickened to `5px` + shadow enhanced |
+| Message card (user) | Background `bg-user/5` + border thickened + whisper shadow |
+| Message card (assistant) | Background `bg-assistant/5` + border thickened + whisper shadow |
+| Message card (system) | Background `bg-system/5` + border thickened + whisper shadow |
 
-**Key distinction:** Hover = shadow slightly deepened. Selected = background color change + border thickened + shadow. Selected always has more visual dimensions than hover.
+**Key distinction:** Hover = shadow slight deepens. Selected = background color change + border thickened + shadow. Selected has more visual dimensions.
 
-### 5.4 Focus State
+### 7.4 Focus State
 
-Inputs use brand blue border on focus:
-
-```css
-border-color: #3b82f6;
-```
-
-### 5.5 Error State
-
-Errors use a red palette:
+Inputs use Focus Blue border for accessibility:
 
 ```css
-/* Inline error (landing) */
-color: #ef4444;
-
-/* Error panel (session) */
-background: #fef2f2;
-border: 1px solid #fecaca;
-color: #991b1b;
-
-/* Summary error */
-color: #ef4444;
-font-style: italic;
+box-shadow: 0px 0px 0px 1px var(--color-background), 0px 0px 0px 3px var(--color-focus);
 ```
 
----
+This is the **only cool color** in the system, reserved for keyboard accessibility.
 
-## 6. Icons
+### 7.5 Error State
 
-The project does not use an icon library. All "icons" are implemented with characters:
+Errors use warm crimson palette:
 
-| Element | Implementation | Description |
-|---------|---------------|-------------|
-| Back arrow | `&larr;` HTML entity | Session header back button |
-| Expand/collapse arrow | `▶` character + CSS `transform: rotate(90deg)` | Stage section expand/collapse indicator |
-| Pipeline arrow | `→` character | Stage connectors in pipeline path |
-| JSON collapse marker | `▼` / `▶` characters | JSON tree node expand/collapse |
-| Loading animation | CSS spinner (`border + border-top-color + animation: spin`) | Data loading |
+```css
+/* Inline error */
+color: oklch(0.45 0.12 25); /* Error Crimson */
 
-**Rules:**
-- Character icons inherit parent text color by default. Use light gray for de-emphasis (e.g., `#9ca3af`, `#d1d5db`).
-- Arrow rotation uses `transition: transform 0.15s` for consistency with global animation timing.
-
----
-
-## 7. Border Radius
-
-| Value | Usage |
-|-------|-------|
-| `6px` | Stage sections, back button, JSON tree |
-| `8px` | Inputs, buttons, stage section inner borders, error panels |
-| `10px` | Message cards, badges |
-| `12px` | Pipeline pills, landing card, timing bar track/fill |
-| `50%` | Spinner (circle) |
-
-**Rule:** Do not hardcode non-standard pixel values. Border radius should be selected from the `6px → 8px → 10px → 12px` scale.
+/* Error panel */
+background: rgba(oklch(0.45 0.12 25), 0.1);
+border: 1px solid rgba(oklch(0.45 0.12 25), 0.2);
+color: oklch(0.45 0.12 25);
+```
 
 ---
 
@@ -243,87 +267,113 @@ The project does not use an icon library. All "icons" are implemented with chara
 
 ### 8.1 Principles
 
-- **Fast, restrained.** Motion helps users understand change — it doesn't show off.
-- **Fade in/out preferred.** Element appearance/disappearance uses opacity transitions, not slides.
-- **No bounce.** No spring/bounce easing.
+- **Deliberate, unhurried.** Motion helps users understand change — it doesn't show off.
+- **Fade in/out preferred.** Element appearance/disappearance uses opacity transitions.
+- **No bounce, no spring.** Animations use ease-out, never ease-in-out bounce.
 
 ### 8.2 Durations
 
 | Scenario | Duration | Implementation |
 |----------|----------|----------------|
-| Color / opacity change | 150ms | `transition: border-color 0.15s` / `transition: background 0.15s` |
-| Arrow rotation | 150ms | `transition: transform 0.15s` |
-| Shadow change | 150ms | `transition: box-shadow 0.15s` |
-| Timing bar width | 300ms | `transition: width 0.3s` |
-| Loading spin | 600ms (infinite) | `animation: spin 0.6s linear infinite` |
-| Page transition | No motion | View switching via `hidden` class, instant show/hide |
+| Color / opacity change | 200ms | `transition: all 0.2s` |
+| Arrow rotation | 200ms | `transition: transform 0.2s` |
+| Shadow change | 200ms | `transition: box-shadow 0.2s` |
+| Timing bar width | 300ms | `transition: width 0.3s ease-out` |
+| Loading spin | 600ms (infinite) | CSS spin animation |
+| Fade in up | 400ms | Page entry, card appearance |
+| Page transition | 500ms | Editorial chapter change feel |
 
 ---
 
 ## 9. Component Specifications
 
-### 9.1 Message Card
+### 9.1 Landing Card
 
-The core component — displays each message in the pipeline:
+Entry form — centered, warm, editorial:
 
-- **Left border color** by message type: blue (user), green (assistant), gray (system)
-- **Badge** uses the same color with white text
-- **Timestamp** right-aligned, light gray
-- **Body** supports truncation (over 200px height), with "Show more" button
-- **Trace panel** collapsed at the bottom, separated by `border-top`
+- **Background:** Ivory (`#faf9f5`)
+- **Border:** Border Cream (`1px solid #f0eee6`)
+- **Radius:** 8px (comfortably rounded)
+- **Shadow:** Whisper (`rgba(0,0,0,0.03) 0px 4px 24px`)
+- **Title:** 48px Georgia, Near Black, line-height 1.10
+- **Subtitle:** 14px sans-serif, Olive Gray, line-height 1.60
+- **Input:** 12px radius, border cream, blue focus ring
+- **Button:** Terracotta, Ivory text, 8px radius, ring shadow
+- **Padding:** 40px horizontal, 32px vertical
 
-### 9.2 Pipeline Path Indicator
+### 9.2 Session Header
 
-Pipeline visualization — shows which stages are active:
+Sticky top navigation — warm, editorial:
 
-- All 6 stages always displayed (`querier → router → scenario_selector → agent → generator → questioner`)
-- Active stage: blue background, blue text `background: #eff6ff; color: #3b82f6; border-color: #bfdbfe`
-- Inactive stage: gray background, gray text `background: #f3f4f6; color: #9ca3af`
+- **Background:** Ivory (`#faf9f5`)
+- **Border-bottom:** Border Cream
+- **Brand name:** 20px Georgia, Near Black
+- **Subtitle:** 12px sans-serif, Stone Gray
+- **Meta badges:** 10px uppercase tracked, warm sand background
+
+### 9.3 Message Card
+
+The core component — displays each message:
+
+- **Left border:** 3px thick, color by type (user/assistant/system)
+- **Background:** Ivory (`#faf9f5`) on rest, 5% opacity variant on selected
+- **Border:** Border Cream (`1px solid #f0eee6`)
+- **Radius:** 8px
+- **Shadow:** Whisper (`rgba(0,0,0,0.02) 0px 2px 12px`) on rest, enhanced on selected
+- **Badge:** Small (10px), uppercase, 0.1em tracking, radius 6px
+- **Timestamp:** 12px, Stone Gray, right-aligned
+- **Body:** 14px monospace, Near Black, line-height 1.60
+- **Trace panel:** Separated by `border-top`, warm sand header background
+
+### 9.4 Pipeline Path Indicator
+
+Pipeline visualization:
+
+- All 6 stages always displayed
+- Active stage: Terracotta background (`bg-primary/10`), Terracotta text, border
+- Inactive stage: Warm sand background, Stone Gray text
 - Stages connected by `→` arrows
+- Gap: 8px
 
-### 9.3 Timing Bars
+### 9.5 Timing Bars
 
 Stage duration visualization:
 
-- Horizontal bar chart, labels right-aligned at `120px` width
-- Fill color uniform blue `#3b82f6`
-- Duration values displayed on the right
-- Minimum width `2px` to ensure very short durations are visible
+- Horizontal bar chart, labels right-aligned at 100px width
+- Fill color: Terracotta (`#c96442`)
+- Duration values: 12px monospace, Near Black, right-aligned
+- Bar height: 10px (2.5 Tailwind), rounded 6px
+- Track background: Warm sand
+- Animation: 300ms ease-out width transition
 
-### 9.4 Stage Section
+### 9.6 Stage Section
 
 Pipeline stage details, collapsible:
 
-- **Header:** Arrow + stage name + duration badge (right side)
+- **Header:** Warm sand background (`#e8e6dc`), 12px padding
+- **Arrow:** 10px, rotates 90deg on expand
 - **Body:** Summary grid + JSON tree toggle
-- Collapse/expand via CSS `display: none` toggle
-- Arrow uses `transform: rotate(90deg)` to indicate expanded state
+- **Border:** Border cream, 8px radius
+- **Hover:** Background darkens slightly
 
-### 9.5 Summary Grid
+### 9.7 Summary Grid
 
 Key-value grid for stage summaries:
 
-- Key right-aligned at `120px`, light gray
-- Value left-aligned, hover to expand long text
-- Responsive: key width shrinks to `80px` on small screens
+- Key right-aligned at 110px, 10px uppercase tracked, Stone Gray
+- Value left-aligned, 12px monospace, Near Black
+- Hover on row: Warm sand background at 30% opacity
+- Responsive: key shrinks to 80px on small screens
 
-### 9.6 JSON Tree
+### 9.8 JSON Tree
 
 Raw data browser:
 
-- Monospace font, light gray background
+- Monospace font, Ivory background
 - Collapsible/expandable nodes
-- Syntax-colored by data type: key (gray), string (green), number (blue), boolean (purple), null (gray italic)
+- Syntax colors: key (muted blue-green), string (muted green), number (muted teal), boolean (terracotta), null (stone gray italic)
 - Max depth 4 levels, max string length 300 characters (click to expand)
-- Hidden by default, toggled by "Show raw JSON" button
-
-### 9.7 Landing Card
-
-Entry form:
-
-- Centered white card, max-width `440px`
-- Title + subtitle + input + button + error message
-- Error message always reserves space (`min-height: 20px`) to prevent layout shifts
+- Hover on row: Warm sand background at 30% opacity
 
 ---
 
@@ -337,10 +387,10 @@ Small-screen adaptations (`@media (max-width: 640px)`):
 |---------|--------|
 | Session header | Horizontal → vertical layout, left-aligned |
 | Session meta | Wraps allowed |
-| Summary key | `120px → 80px` |
+| Summary key | `110px → 80px` |
 | Summary value | `500px → 300px` max-width |
-| Timing label | `120px → 80px` |
-| Pipeline path | Gap reduced `6px → 4px` |
+| Timing label | `100px → 70px` |
+| Pipeline path | Gap reduced `8px → 6px` |
 
 ---
 
@@ -350,30 +400,32 @@ The following are **prohibited** in the codebase:
 
 | Prohibited | Reason | Alternative |
 |------------|--------|-------------|
-| Non-standard grayscale values | Breaks hierarchy consistency | Use the defined neutral scale (`#333`, `#6b7280`, `#9ca3af`, `#e5e7eb`, `#f3f4f6`, `#fafafa`) |
-| Arbitrary pixel font sizes | Escapes the design system | Use the defined font size scale |
+| Cool blue-grays | Breaks warm palette consistency | Use defined warm neutral scale |
+| Pure white background (`#fff`) | Lacks warmth, feels sterile | Use Ivory (`#faf9f5`) or Parchment (`#f5f4ed`) |
+| Pure black text (`#000`) | Harsh, lacks warmth | Use Near Black (`#141413`) |
+| Sharp corners (<6px) | Conflicts with soft, approachable identity | Use 8-12px radius scale |
+| Bold serif headings (700+) | Breaks single-weight serif principle | Use weight 400 (normal) for all serifs |
 | `transform: scale()` on hover | Jarring, conflicts with restrained style | Use background color or shadow changes |
-| Multi-color gradient backgrounds | Decorative, distracting | Solid colors |
-| Skeleton loading | Conflicts with minimalist style | CSS spinner (current implementation) |
-| Toast for action confirmation | Fleeting, easily missed | Inline error/status text |
-| Fixed-width dropdowns | Text wrapping is unpredictable | Auto-width |
-| Pure black background `#000` | Harsh on LCD screens | Use `#333` or dark gray |
-| Adding an icon library | Character icons suffice for current needs | Continue using HTML entities / Unicode characters |
+| Multi-color gradient backgrounds | Decorative, distracting | Solid colors only |
+| Hard drop shadows | Too harsh for editorial feel | Use ring shadows (`0px 0px 0px 1px`) or whisper shadows |
+| Saturated colors beyond terracotta | Breaks muted palette | Stick to defined semantic colors |
+| Spring/bounce animations | Too playful, not editorial | Use ease-out or ease-in |
+| Skeleton loading | Conflicts with minimalist style | SVG spinner with warm colors |
 
 ---
 
-## 12. Current Tech Stack
+## 12. Tech Stack
 
 | Layer | Technology | Location |
 |-------|-----------|----------|
-| Styles | Plain CSS (no framework) | `apps/web/src/public/style.css` |
-| Markup | HTML | `apps/web/src/public/index.html` |
-| Interaction | Vanilla JavaScript (no framework) | `apps/web/src/public/app.js` |
+| Framework | Next.js 15 (App Router) | `apps/web/src/app/` |
+| Styles | Tailwind CSS + custom CSS variables | `packages/ui/src/styles.css` |
+| Components | React | `packages/ui/src/components/` |
 | Business logic | `@tracebug/core` | `packages/core/src/` |
-| API | Node.js + `http` module | `apps/web/src/api/session.ts` |
-| Database | MySQL (`mysql2`) | `apps/web/src/db.ts` |
+| API | Express + Node.js (ESM) | `server/src/` |
+| Database | MySQL (`mysql2`) | `server/src/db.ts` |
 
-**Migration path:** For more complex UI needs, migrate to React + Tailwind + shadcn/ui. The color, spacing, font size, and interaction specifications in this document should be re-implemented through CSS variables / Tailwind tokens with the same semantics.
+**Design tokens:** All colors, spacing, and typography defined as CSS custom properties in `packages/ui/src/styles.css` using OKLCh color space.
 
 ---
 
@@ -381,13 +433,17 @@ The following are **prohibited** in the codebase:
 
 Before submitting any UI change:
 
-- [ ] Do all colors come from the defined palette? Any non-standard colors introduced?
-- [ ] Are font sizes within the `11px – 16px` range (landing title `32px` excluded)?
-- [ ] Are font weights limited to `400` and `500–600`?
-- [ ] Is the hover state lighter than the selected state?
-- [ ] Does spacing use multiples of the 4px grid?
-- [ ] Do new interactions include `transition: 0.15s` (timing bars excluded)?
-- [ ] Are border radii selected from `6px / 8px / 10px / 12px`?
-- [ ] Are there unnecessary dividers (spacing or background color could replace)?
-- [ ] Does the layout work on small screens (≤640px)?
-- [ ] Are new semantic colors used only to convey meaning, not decoration?
+- [ ] Do all colors have warm undertones? No cool blues or pure blacks?
+- [ ] Is Terracotta reserved only for primary CTAs and brand moments?
+- [ ] Are serif headings at weight 400 (normal) — no bold?
+- [ ] Do small labels (≤12px) use letter-spacing (0.1em)?
+- [ ] Is body line-height 1.60 (relaxed)?
+- [ ] Are border radii 8-12px (soft, approachable)?
+- [ ] Do shadows use ring pattern (`0px 0px 0px 1px`) or whisper softness?
+- [ ] Is Focus Blue (`#3898ec`) only used for input accessibility?
+- [ ] Are animations ≥200ms (deliberate, unhurried)?
+- [ ] Does spacing use multiples of 8px grid?
+- [ ] Do new interactions include `transition: 200ms`?
+- [ ] Does layout work on small screens (≤640px)?
+- [ ] Are semantic colors used only for small areas, not large fills?
+- [ ] Is Ivory (`#faf9f5`) or Parchment (`#f5f4ed`) used for backgrounds, not pure white?

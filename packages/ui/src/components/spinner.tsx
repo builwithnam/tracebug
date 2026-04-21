@@ -6,9 +6,9 @@ interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const sizeMap = {
-  sm: "size-4 border-2",
-  default: "size-6 border-3",
-  lg: "size-8 border-4",
+  sm: "w-4 h-4",
+  default: "w-6 h-6",
+  lg: "w-8 h-8",
 };
 
 function Spinner({ size = "default", className, ...props }: SpinnerProps) {
@@ -16,13 +16,28 @@ function Spinner({ size = "default", className, ...props }: SpinnerProps) {
     <div
       role="status"
       aria-label="Loading"
-      className={cn(
-        "animate-spin rounded-full border-border border-t-primary",
-        sizeMap[size],
-        className,
-      )}
+      className={cn("relative", sizeMap[size], className)}
       {...props}
-    />
+    >
+      {/* Main spinner circle - warm terracotta */}
+      <svg
+        className="animate-spin"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Track */}
+        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" className="text-muted opacity-25" />
+        {/* Progress */}
+        <path
+          d="M12 2C6.48 2 2 6.48 2 12"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          className="text-primary"
+        />
+      </svg>
+    </div>
   );
 }
 

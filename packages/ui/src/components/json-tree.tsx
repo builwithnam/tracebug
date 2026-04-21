@@ -14,7 +14,7 @@ const JsonTree = React.forwardRef<HTMLDivElement, JsonTreeProps>(
       <div
         ref={ref}
         className={cn(
-          "font-mono text-xs leading-relaxed bg-muted border border-border rounded-md p-3 max-h-[400px] overflow-auto whitespace-pre-wrap break-all",
+          "font-mono text-xs leading-relaxed bg-card border border-border rounded-lg p-4 max-h-[500px] overflow-auto whitespace-pre-wrap break-all",
           className,
         )}
       >
@@ -38,19 +38,19 @@ interface JsonNodeProps {
 
 function JsonNode({ data, depth, maxDepth, maxStringLength }: JsonNodeProps) {
   if (depth > maxDepth) {
-    return <span className="text-muted-foreground italic">... (depth limit)</span>;
+    return <span className="text-foreground-tertiary italic">... (depth limit)</span>;
   }
 
   if (data === null) {
-    return <span className="text-muted-foreground italic">null</span>;
+    return <span className="text-foreground-tertiary italic">null</span>;
   }
 
   if (typeof data === "boolean") {
-    return <span className="text-[oklch(0.55_0.25_300)]">{String(data)}</span>;
+    return <span className="text-primary font-medium">{String(data)}</span>;
   }
 
   if (typeof data === "number") {
-    return <span className="text-primary">{String(data)}</span>;
+    return <span className="text-info font-medium">{String(data)}</span>;
   }
 
   if (typeof data === "string") {
@@ -58,7 +58,14 @@ function JsonNode({ data, depth, maxDepth, maxStringLength }: JsonNodeProps) {
   }
 
   if (Array.isArray(data)) {
-    return <JsonArray data={data} depth={depth} maxDepth={maxDepth} maxStringLength={maxStringLength} />;
+    return (
+      <JsonArray
+        data={data}
+        depth={depth}
+        maxDepth={maxDepth}
+        maxStringLength={maxStringLength}
+      />
+    );
   }
 
   if (typeof data === "object") {
@@ -83,7 +90,7 @@ function JsonString({ value, maxStringLength }: { value: string; maxStringLength
   if (value.length > maxStringLength && !expanded) {
     return (
       <span
-        className="text-[oklch(0.55_0.17_155)] cursor-pointer"
+        className="text-success cursor-pointer hover:text-primary transition-colors"
         onClick={() => setExpanded(true)}
         title={value}
       >
@@ -93,7 +100,7 @@ function JsonString({ value, maxStringLength }: { value: string; maxStringLength
   }
 
   return (
-    <span className="text-[oklch(0.55_0.17_155)]">&quot;{value}&quot;</span>
+    <span className="text-success">&quot;{value}&quot;</span>
   );
 }
 
@@ -114,38 +121,47 @@ function JsonObject({
   const [collapsed, setCollapsed] = React.useState(false);
 
   if (entries.length === 0) {
-    return <span className="text-muted-foreground">{"{}"}</span>;
+    return <span className="text-foreground-tertiary">{"{}"}</span>;
   }
 
   return (
     <>
       <span
-        className="text-muted-foreground cursor-pointer select-none inline-block w-3.5 text-center"
+        className={cn(
+          "text-foreground-secondary cursor-pointer select-none inline-block w-4 text-center transition-transform duration-200 hover:text-foreground",
+          collapsed ? "rotate-0" : "rotate-90",
+        )}
         onClick={() => setCollapsed(!collapsed)}
       >
-        {collapsed ? "▶" : "▼"}
+        ▶
       </span>
-      <span className="text-muted-foreground">{"{"}</span>
+      <span className="text-foreground-tertiary">{"{"}</span>
       {!collapsed && (
-        <div className="pl-4">
+        <div className="pl-5">
           {entries.map(([key, value], i) => (
-            <div key={key}>
-              <span className="text-muted-foreground">&quot;{key}&quot;: </span>
+            <div
+              key={key}
+              className="hover:bg-muted/30 -mx-2 px-2 py-0.5 rounded-md transition-colors"
+            >
+              <span className="text-info font-medium">&quot;{key}&quot;</span>
+              <span className="text-foreground-tertiary mx-1">:</span>
               <JsonNode
                 data={value}
                 depth={depth + 1}
                 maxDepth={maxDepth}
                 maxStringLength={maxStringLength}
               />
-              {i < entries.length - 1 && <span className="text-muted-foreground">,</span>}
+              <span className="text-foreground-tertiary/50 mx-0.5">
+                {i < entries.length - 1 ? "," : ""}
+              </span>
             </div>
           ))}
         </div>
       )}
       {collapsed && (
-        <span className="text-muted-foreground italic"> ... </span>
+        <span className="text-foreground-tertiary italic mx-1">... {entries.length} keys</span>
       )}
-      <span className="text-muted-foreground">{"}"}</span>
+      <span className="text-foreground-tertiary">{"}"}</span>
     </>
   );
 }
@@ -166,37 +182,45 @@ function JsonArray({
   const [collapsed, setCollapsed] = React.useState(false);
 
   if (data.length === 0) {
-    return <span className="text-muted-foreground">{"[]"}</span>;
+    return <span className="text-foreground-tertiary">{"[]"}</span>;
   }
 
   return (
     <>
       <span
-        className="text-muted-foreground cursor-pointer select-none inline-block w-3.5 text-center"
+        className={cn(
+          "text-foreground-secondary cursor-pointer select-none inline-block w-4 text-center transition-transform duration-200 hover:text-foreground",
+          collapsed ? "rotate-0" : "rotate-90",
+        )}
         onClick={() => setCollapsed(!collapsed)}
       >
-        {collapsed ? "▶" : "▼"}
+        ▶
       </span>
-      <span className="text-muted-foreground">{"["}</span>
+      <span className="text-foreground-tertiary">{"["}</span>
       {!collapsed && (
-        <div className="pl-4">
+        <div className="pl-5">
           {data.map((value, i) => (
-            <div key={i}>
+            <div
+              key={i}
+              className="hover:bg-muted/30 -mx-2 px-2 py-0.5 rounded-md transition-colors"
+            >
               <JsonNode
                 data={value}
                 depth={depth + 1}
                 maxDepth={maxDepth}
                 maxStringLength={maxStringLength}
               />
-              {i < data.length - 1 && <span className="text-muted-foreground">,</span>}
+              <span className="text-foreground-tertiary/50 mx-0.5">
+                {i < data.length - 1 ? "," : ""}
+              </span>
             </div>
           ))}
         </div>
       )}
       {collapsed && (
-        <span className="text-muted-foreground italic"> ... </span>
+        <span className="text-foreground-tertiary italic mx-1">... {data.length} items</span>
       )}
-      <span className="text-muted-foreground">{"]"}</span>
+      <span className="text-foreground-tertiary">{"]"}</span>
     </>
   );
 }

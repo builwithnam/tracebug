@@ -1,54 +1,251 @@
 @import "tailwindcss";
 
 /*
- * Tracebug Design System Tokens
- * Based on OKLCh color space. All values defined here — never hardcode Tailwind colors.
+ * Tracebug Design System — Claude-Inspired "Technical Manuscript"
+ * Warm parchment tones, editorial serif headings, soft approachable feel
+ * Treating pipeline traces as a kind of literary code documentation
  */
 
 @theme {
-  /* Neutral scale — 90% of the interface */
-  --color-background: oklch(0.97 0 0);
-  --color-card: oklch(1 0 0);
-  --color-popover: oklch(1 0 0);
-  --color-muted: oklch(0.96 0 0);
-  --color-muted-foreground: oklch(0.55 0.01 260);
-  --color-border: oklch(0.90 0.01 260);
-  --color-input: oklch(0.87 0.01 260);
-  --color-foreground: oklch(0.20 0 0);
-  --color-secondary: oklch(0.96 0 0);
-  --color-secondary-foreground: oklch(0.20 0 0);
+  /* Surface & Background — warm parchment tones */
+  --color-background: oklch(0.96 0.01 85); /* Parchment #f5f4ed */
+  --color-background-hover: oklch(0.94 0.012 85);
+  --color-card: oklch(0.98 0.008 85); /* Ivory #faf9f5 */
+  --color-card-hover: oklch(0.97 0.009 85);
+  --color-popover: oklch(0.96 0.01 85);
+  --color-muted: oklch(0.92 0.012 85); /* Warm Sand #e8e6dc */
+  --color-muted-hover: oklch(0.90 0.014 85);
+  --color-muted-foreground: oklch(0.55 0.02 65); /* Stone Gray #87867f */
+  --color-border: oklch(0.93 0.01 85); /* Border Cream #f0eee6 */
+  --color-border-strong: oklch(0.88 0.015 85); /* Border Warm #e8e6dc */
+  --color-border-dark: oklch(0.20 0.01 70); /* Dark Surface #30302e */
+  --color-input: oklch(0.92 0.012 85);
+  --color-input-hover: oklch(0.95 0.01 85);
+  --color-foreground: oklch(0.10 0.01 70); /* Near Black #141413 */
+  --color-foreground-secondary: oklch(0.38 0.015 70); /* Olive Gray #5e5d59 */
+  --color-foreground-tertiary: oklch(0.55 0.02 65); /* Stone Gray */
+  --color-secondary: oklch(0.92 0.012 85);
+  --color-secondary-hover: oklch(0.90 0.014 85);
+  --color-secondary-foreground: oklch(0.32 0.012 70); /* Charcoal Warm #4d4c48 */
 
-  /* Brand / Primary — blue */
-  --color-primary: oklch(0.55 0.2 260);
-  --color-primary-foreground: oklch(1 0 0);
+  /* Brand / Primary — Terracotta (warm, earthy) */
+  --color-primary: oklch(0.52 0.12 35); /* Terracotta #c96442 */
+  --color-primary-hover: oklch(0.48 0.11 35);
+  --color-primary-foreground: oklch(0.98 0.008 85); /* Ivory */
 
-  /* Semantic colors */
-  --color-destructive: oklch(0.55 0.22 25);
-  --color-destructive-foreground: oklch(1 0 0);
-  --color-success: oklch(0.55 0.17 155);
-  --color-success-foreground: oklch(1 0 0);
-  --color-info: oklch(0.55 0.2 260);
-  --color-info-foreground: oklch(1 0 0);
+  /* Accent — Coral for text highlights */
+  --color-accent: oklch(0.58 0.12 35); /* Coral #d97757 */
+  --color-accent-foreground: oklch(0.98 0.008 85);
 
-  /* Ring / focus */
-  --color-ring: oklch(0.55 0.15 260);
+  /* Message type colors — warm variants */
+  --color-user: oklch(0.58 0.08 45); /* Warm amber-brown */
+  --color-user-dim: oklch(0.85 0.04 45);
+  --color-user-foreground: oklch(0.98 0.008 85);
+  --color-assistant: oklch(0.52 0.12 35); /* Terracotta */
+  --color-assistant-dim: oklch(0.85 0.06 35);
+  --color-assistant-foreground: oklch(0.98 0.008 85);
+  --color-system: oklch(0.42 0.015 70); /* Dark charcoal */
+  --color-system-dim: oklch(0.85 0.008 70);
+  --color-system-foreground: oklch(0.98 0.008 85);
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 14px;
+  /* Semantic colors — warm variants */
+  --color-destructive: oklch(0.45 0.12 25); /* Warm red #b53333 */
+  --color-destructive-dim: oklch(0.75 0.08 25);
+  --color-destructive-foreground: oklch(0.98 0.008 85);
+  --color-success: oklch(0.55 0.08 145); /* Muted green */
+  --color-success-dim: oklch(0.80 0.06 145);
+  --color-success-foreground: oklch(0.98 0.008 85);
+  --color-info: oklch(0.58 0.12 210); /* Muted blue-green */
+  --color-info-foreground: oklch(0.98 0.008 85);
+
+  /* Dark theme surfaces */
+  --color-dark-surface: oklch(0.20 0.01 70); /* Dark Surface #30302e */
+  --color-dark-background: oklch(0.10 0.008 70); /* Deep Dark #141413 */
+  --color-dark-foreground: oklch(0.70 0.015 85); /* Warm Silver #b0aea5 */
+
+  /* Ring shadows — warm-toned */
+  --color-ring: oklch(0.70 0.02 85); /* Ring Warm #d1cfc5 */
+  --color-ring-subtle: oklch(0.85 0.015 85); /* Ring Subtle */
+  --color-ring-deep: oklch(0.65 0.025 85); /* Ring Deep #c2c0b6 */
+
+  /* Focus ring — only cool color for accessibility */
+  --color-focus: oklch(0.58 0.14 230); /* Focus Blue #3898ec */
+
+  /* Radius — soft and approachable */
+  --radius-sm: 6px; /* Subtly rounded */
+  --radius-md: 8px; /* Comfortably rounded - standard */
+  --radius-lg: 12px; /* Generously rounded - primary buttons */
+  --radius-xl: 16px; /* Very rounded - featured */
   --radius-full: 999px;
 
-  /* Font families */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-    "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono: "SF Mono", "Cascadia Code", "Fira Code", "Consolas", ui-monospace, monospace;
+  /* Font families — Claude-inspired hierarchy */
+  --font-serif: Georgia, "Times New Roman", Times, serif; /* Anthropic Serif fallback */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "SF Mono", "Cascadia Code", "Fira Code", Consolas, ui-monospace, monospace;
 }
 
-/*
- * Dark mode — future implementation
- * When enabled, override tokens under @media (prefers-color-scheme: dark)
- * or a .dark class on :root.
- */
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background-color: var(--color-background);
+}
+
+/* Selection - warm terracotta */
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+/* Scrollbar - warm-toned */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+  border-left: 1px solid var(--color-border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-foreground-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-foreground-secondary);
+}
+
+/* Focus styles - warm ring with blue focus */
+:focus-visible {
+  outline: none;
+  box-shadow:
+    0px 0px 0px 1px var(--color-background),
+    0px 0px 0px 3px var(--color-focus);
+}
+
+/* Button reset */
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Link styles */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Code blocks - monospace with warm background */
+pre {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  background: var(--color-muted);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.15em 0.4em;
+  background: var(--color-muted);
+  border-radius: 3px;
+  color: var(--color-foreground);
+}
+
+/* Animations - subtle, editorial pacing */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Staggered animation delays */
+.animate-delay-100 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-300 {
+  animation-delay: 0.3s;
+}
+
+.animate-delay-400 {
+  animation-delay: 0.4s;
+}
+
+.animate-delay-500 {
+  animation-delay: 0.5s;
+}
+
+/* Editorial section transitions */
+@keyframes pageTransition {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: pageTransition 0.5s ease-out forwards;
+}

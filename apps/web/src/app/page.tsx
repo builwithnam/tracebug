@@ -21,25 +21,54 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-[440px] text-center p-12 px-10 border-0 shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-        <h1 className="text-[32px] font-medium tracking-tight text-foreground">tracebug</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Inspect LangChain pipeline traces</p>
+      <Card className="w-full max-w-[480px] animate-fade-in-up">
+        {/* Header - serif for editorial feel */}
+        <div className="text-center p-10 pb-8 border-b border-border">
+          <h1 className="text-5xl font-serif font-normal text-foreground leading-tight mb-3">
+            tracebug
+          </h1>
+          <p className="text-base text-foreground-secondary leading-relaxed max-w-[280px] mx-auto">
+            Inspect LangChain pipeline traces
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-3">
-          <Input
-            value={shareId}
-            onChange={(e) => setShareId(e.target.value)}
-            placeholder="Enter share ID"
-            autoComplete="off"
-            spellCheck={false}
-            className="h-10 text-base"
-          />
-          <Button type="submit" className="h-10 text-base w-full">
-            Load Session
-          </Button>
-        </form>
+        {/* Form */}
+        <div className="p-10 pt-8">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="share-id"
+                className="text-xs font-medium uppercase tracking-[0.1em] text-foreground-tertiary"
+              >
+                Share ID
+              </label>
+              <Input
+                id="share-id"
+                value={shareId}
+                onChange={(e) => setShareId(e.target.value)}
+                placeholder="Enter your share ID..."
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
 
-        <div className="mt-3 text-sm text-destructive min-h-5">{error}</div>
+            <Button type="submit" className="h-12 text-base rounded-lg font-medium">
+              Load Session
+            </Button>
+          </form>
+
+          {/* Error */}
+          <div className="mt-4 h-6 text-sm text-destructive text-center animate-fade-in">
+            {error}
+          </div>
+        </div>
+
+        {/* Footer - warm, subtle */}
+        <div className="px-10 pb-6 text-center">
+          <p className="text-xs text-foreground-tertiary">
+            A warm, thoughtful debugging companion
+          </p>
+        </div>
       </Card>
     </div>
   );

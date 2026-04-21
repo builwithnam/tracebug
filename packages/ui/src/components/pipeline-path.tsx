@@ -13,21 +13,28 @@ interface PipelinePathProps {
 
 function PipelinePath({ stages, className }: PipelinePathProps) {
   return (
-    <div className={cn("flex flex-wrap items-center gap-1.5 max-sm:gap-1", className)}>
+    <div className={cn("flex flex-wrap items-center gap-2 max-sm:gap-1.5", className)}>
       {stages.map((stage, i) => (
         <React.Fragment key={stage.name}>
           <span
             className={cn(
-              "text-xs font-medium px-2.5 py-1 rounded-xl border transition-colors duration-150",
+              "inline-flex items-center text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-200 leading-none",
               stage.active
-                ? "bg-primary/10 text-primary border-primary/30"
-                : "bg-muted text-muted-foreground border-border",
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "bg-muted text-foreground-secondary",
             )}
           >
             {stage.name}
           </span>
           {i < stages.length - 1 && (
-            <span className="text-muted-foreground/50 text-xs">→</span>
+            <span
+              className={cn(
+                "text-sm transition-colors duration-200",
+                stage.active ? "text-primary" : "text-foreground-tertiary",
+              )}
+            >
+              →
+            </span>
           )}
         </React.Fragment>
       ))}
