@@ -2,7 +2,7 @@ import http, { IncomingMessage, ServerResponse } from "http";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { AppConfig } from "./config.js";
+import type { AppConfig } from "@tracebug/core";
 import { handleSession } from "./api/session.js";
 import { closePool } from "./db.js";
 

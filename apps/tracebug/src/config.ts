@@ -1,19 +1,9 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
+import type { DbConfig, AppConfig } from "@tracebug/core";
 
-export interface DbConfig {
-  host: string;
-  port: number;
-  user: string;
-  password: string;
-  database: string;
-}
-
-export interface AppConfig {
-  db: DbConfig;
-  port?: number;
-}
+export type { DbConfig, AppConfig };
 
 const CONFIG_DIR = path.join(os.homedir(), ".tracebug");
 const CONFIG_PATH = path.join(CONFIG_DIR, "settings.json");

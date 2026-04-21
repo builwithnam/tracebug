@@ -1,4 +1,4 @@
-import { MessageData } from "../db.js";
+import { MessageData } from "./types.js";
 
 export interface ParsedStage {
   raw: unknown;
@@ -26,7 +26,7 @@ export interface LangChainAIMessage {
   };
 }
 
-interface StatTiming {
+export interface StatTiming {
   querierDuration: number | null;
   routerDuration: number | null;
   scenarioSelectorDuration: number | null;
