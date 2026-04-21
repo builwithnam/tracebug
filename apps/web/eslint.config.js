@@ -7,7 +7,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   nodePlugin.configs["flat/recommended"],
   {
-    files: ["src/**/*.ts", "tests/**/*.ts"],
+    files: ["src/server/**/*.ts", "tests/**/*.ts"],
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.eslint.json",
@@ -34,6 +34,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["dist/**", "node_modules/**", "src/public/**"],
+    ignores: ["dist/**", "node_modules/**", "src/public/**", "src/frontend/**"],
   },
 );

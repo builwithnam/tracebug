@@ -1,8 +1,8 @@
 import { describe, it, beforeAll, afterAll, expect } from "vitest";
 import http from "http";
 import mysql from "mysql2/promise";
-import { createServer } from "../src/server.js";
-import { closePool } from "../src/db.js";
+import { createServer } from "../src/server/server.js";
+import { closePool } from "../src/server/db.js";
 
 const TEST_DB_CONFIG = {
   host: "localhost",

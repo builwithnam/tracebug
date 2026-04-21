@@ -1,8 +1,8 @@
 import { describe, it, beforeAll, afterAll, expect, vi } from "vitest";
 import { IncomingMessage, ServerResponse } from "http";
 import mysql from "mysql2/promise";
-import { handleSession } from "../src/api/session.js";
-import { closePool } from "../src/db.js";
+import { handleSession } from "../src/server/api/session.js";
+import { closePool } from "../src/server/db.js";
 
 function createMocks(url: string, method = "GET") {
   const req = { url, method } as unknown as IncomingMessage;
