@@ -15,7 +15,8 @@
     "build": "tsc && cp src/public/app.js src/public/index.html src/public/style.css dist/public/",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "test": "node --test tests/**/*.test.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' 'tests/**/*.ts' --fix",
     "format": "prettier --write src/ tests/",
@@ -45,6 +46,7 @@
     "prettier": "^3.8.3",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "typescript-eslint": "^8.58.2"
+    "typescript-eslint": "^8.58.2",
+    "vitest": "^4.1.4"
   }
 }

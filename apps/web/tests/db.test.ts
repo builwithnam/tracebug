@@ -1,5 +1,4 @@
-import { describe, it, before, after } from "node:test";
-import assert from "assert";
+import { describe, it, beforeAll, afterAll, expect } from "vitest";
 import mysql from "mysql2/promise";
 import { createPool, getSessionByShareId, closePool } from "../src/db.js";
 
@@ -14,8 +13,7 @@ const TEST_DB_CONFIG = {
 describe("database pool", () => {
   let pool: mysql.Pool;
 
-  before(async () => {
-    // Create test database and tables
+  beforeAll(async () => {
     const conn = await mysql.createConnection({
       host: TEST_DB_CONFIG.host,
       port: TEST_DB_CONFIG.port,
@@ -26,7 +24,6 @@ describe("database pool", () => {
     await conn.query(`DROP DATABASE IF EXISTS ${TEST_DB_CONFIG.database}`);
     await conn.query(`CREATE DATABASE ${TEST_DB_CONFIG.database}`);
 
-    // Close and reconnect with the database specified
     await conn.end();
     const dbConn = await mysql.createConnection({
       host: TEST_DB_CONFIG.host,
@@ -36,7 +33,6 @@ describe("database pool", () => {
       database: TEST_DB_CONFIG.database,
     });
 
-    // Create tables matching the schema
     await dbConn.query(`
       CREATE TABLE share (
         id VARCHAR(255) PRIMARY KEY,
@@ -64,7 +60,6 @@ describe("database pool", () => {
       )
     `);
 
-    // Insert test data
     await dbConn.execute("INSERT INTO share (id, session_id) VALUES (?, ?)", [
       "test-share-123",
       "session-abc",
@@ -101,21 +96,21 @@ describe("database pool", () => {
     pool = createPool(TEST_DB_CONFIG);
     const result = await getSessionByShareId(pool, "test-share-123");
 
-    assert.ok(result, "Should return session data");
-    assert.equal(result.share_id, "test-share-123");
-    assert.equal(result.session_id, "session-abc");
-    assert.ok(Array.isArray(result.messages));
-    assert.equal(result.messages.length, 2);
-    assert.equal(result.messages[0].type, "user");
-    assert.equal(result.messages[0].text, "Hello");
-    assert.ok(Array.isArray(result.traces));
-    assert.equal(result.traces.length, 2);
-    assert.equal(result.traces[0].querier, "querier");
+    expect(result).toBeTruthy();
+    expect(result!.share_id).toBe("test-share-123");
+    expect(result!.session_id).toBe("session-abc");
+    expect(Array.isArray(result!.messages)).toBe(true);
+    expect(result!.messages.length).toBe(2);
+    expect(result!.messages[0].type).toBe("user");
+    expect(result!.messages[0].text).toBe("Hello");
+    expect(Array.isArray(result!.traces)).toBe(true);
+    expect(result!.traces.length).toBe(2);
+    expect(result!.traces[0].querier).toBe("querier");
   });
 
   it("should return null for non-existent share_id", async () => {
     const result = await getSessionByShareId(pool, "non-existent");
-    assert.equal(result, null);
+    expect(result).toBeNull();
   });
 
   it("should handle concurrent requests", async () => {
@@ -125,17 +120,16 @@ describe("database pool", () => {
     }
 
     const results = await Promise.all(promises);
-    assert.equal(results.length, 10);
-    results.forEach((result) => {
-      assert.ok(result);
-      assert.equal(result.share_id, "test-share-123");
-    });
+    expect(results.length).toBe(10);
+    for (const result of results) {
+      expect(result).toBeTruthy();
+      expect(result!.share_id).toBe("test-share-123");
+    }
   });
 
-  after(async () => {
+  afterAll(async () => {
     await closePool();
 
-    // Clean up test database
     const conn = await mysql.createConnection({
       host: TEST_DB_CONFIG.host,
       port: TEST_DB_CONFIG.port,

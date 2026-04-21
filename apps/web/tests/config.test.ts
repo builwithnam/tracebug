@@ -1,5 +1,4 @@
-import { describe, it, afterEach } from "node:test";
-import  assert  from "assert";
+import { describe, it, afterEach, expect, vi } from "vitest";
 import fs from "fs";
 import path from "path";
 import os from "os";
@@ -9,7 +8,7 @@ const CONFIG_PATH = path.join(CONFIG_DIR, "settings.json");
 
 describe("config loading", () => {
   afterEach(() => {
-    // Clean up test config
+    vi.resetModules();
     if (fs.existsSync(CONFIG_PATH)) {
       fs.unlinkSync(CONFIG_PATH);
     }
@@ -30,21 +29,19 @@ describe("config loading", () => {
       }),
     );
 
-    // This will fail because config.ts doesn't exist yet
     const { loadConfig } = await import("../src/config.js");
     const config = loadConfig();
-    assert.equal(config.db.host, "localhost");
-    assert.equal(config.db.port, 3306);
+    expect(config.db.host).toBe("localhost");
+    expect(config.db.port).toBe(3306);
   });
 
   it("should throw when config file missing", async () => {
-    // Ensure config doesn't exist
     if (fs.existsSync(CONFIG_PATH)) {
       fs.unlinkSync(CONFIG_PATH);
     }
 
     const { loadConfig } = await import("../src/config.js");
-    assert.throws(() => loadConfig(), /Config not found/);
+    expect(() => loadConfig()).toThrow(/Config not found/);
   });
 
   it("should throw when db field missing", async () => {
@@ -52,6 +49,6 @@ describe("config loading", () => {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify({ port: 3000 }));
 
     const { loadConfig } = await import("../src/config.js");
-    assert.throws(() => loadConfig(), /missing 'db' field/);
+    expect(() => loadConfig()).toThrow(/missing 'db' field/);
   });
 });

@@ -1,9 +1,8 @@
-import { describe, it, before, after } from "node:test";
-import assert from "node:assert";
+import { describe, it, beforeAll, afterAll, expect } from "vitest";
 import http from "http";
 import mysql from "mysql2/promise";
-import { createServer } from "../dist/server.js";
-import { closePool } from "../dist/db.js";
+import { createServer } from "../src/server.js";
+import { closePool } from "../src/db.js";
 
 const TEST_DB_CONFIG = {
   host: "localhost",
@@ -13,10 +12,9 @@ const TEST_DB_CONFIG = {
   database: "db_test",
 };
 
-const CONFIG = { port: 0, db: TEST_DB_CONFIG }; // port 0 = random available port
+const CONFIG = { port: 0, db: TEST_DB_CONFIG };
 
 let server: http.Server;
-let _baseUrl: string;
 
 function get(
   port: number,
@@ -36,8 +34,7 @@ function get(
 }
 
 describe("Integration: full flow end-to-end", () => {
-  before(async () => {
-    // Set up test database
+  beforeAll(async () => {
     const conn = await mysql.createConnection({
       host: TEST_DB_CONFIG.host,
       port: TEST_DB_CONFIG.port,
@@ -76,7 +73,6 @@ describe("Integration: full flow end-to-end", () => {
       )
     `);
 
-    // Insert a complete test session
     await conn.execute("INSERT INTO share (id, session_id) VALUES (?, ?)", [
       "test-share-abc",
       "session-e2e",
@@ -106,7 +102,6 @@ describe("Integration: full flow end-to-end", () => {
       "Let me find dental cleaning options for you.",
     ]);
 
-    // Insert querier trace
     await conn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
       "session-e2e",
       "querier",
@@ -134,7 +129,6 @@ describe("Integration: full flow end-to-end", () => {
       }),
     ]);
 
-    // Insert router trace
     await conn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
       "session-e2e",
       "router",
@@ -162,7 +156,6 @@ describe("Integration: full flow end-to-end", () => {
       }),
     ]);
 
-    // Insert stat trace
     await conn.execute("INSERT INTO message_data (session_id, stage, payload) VALUES (?, ?, ?)", [
       "session-e2e",
       "stat",
@@ -176,17 +169,146 @@ describe("Integration: full flow end-to-end", () => {
 
     await conn.end();
 
-    // Start server on random port
     server = createServer(CONFIG);
     await new Promise<void>((resolve) => {
       server.listen(0, () => resolve());
     });
-
-    const addr = server.address() as { port: number };
-    _baseUrl = `http://localhost:${addr.port}`;
   });
 
-  after(async () => {
+  function port(): number {
+    return (server.address() as { port: number }).port;
+  }
+
+  // ===== Static file serving =====
+
+  it("serves index.html at /", async () => {
+    const res = await get(port(), "/");
+    expect(res.status).toBe(200);
+    expect(res.body).toContain("tracebug");
+    expect(res.body).toContain("share-id-input");
+    expect(res.body).toContain('href="/style.css"');
+    expect(res.body).toContain('src="/app.js"');
+  });
+
+  it("serves style.css", async () => {
+    const res = await get(port(), "/style.css");
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/css");
+    expect(res.body).toContain(".message-card");
+    expect(res.body).toContain(".json-tree");
+  });
+
+  it("serves app.js", async () => {
+    const res = await get(port(), "/app.js");
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("javascript");
+    expect(res.body).toContain("fetchSession");
+    expect(res.body).toContain("renderJsonTree");
+  });
+
+  it("returns 404 for unknown routes", async () => {
+    const res = await get(port(), "/unknown");
+    expect(res.status).toBe(404);
+  });
+
+  // ===== API error handling =====
+
+  it("returns 400 when share_id is missing", async () => {
+    const res = await get(port(), "/api/session");
+    expect(res.status).toBe(400);
+    const body = JSON.parse(res.body);
+    expect(body).toEqual({ error: "share_id is required" });
+  });
+
+  it("returns 404 for non-existent share_id", async () => {
+    const res = await get(port(), "/api/session?share_id=does-not-exist");
+    expect(res.status).toBe(404);
+    const body = JSON.parse(res.body);
+    expect(body).toEqual({ error: "Share ID not found" });
+  });
+
+  // ===== Full API response =====
+
+  it("returns valid session data for existing share_id", async () => {
+    const res = await get(port(), "/api/session?share_id=test-share-abc");
+
+    expect(res.status).toBe(200);
+
+    const body = JSON.parse(res.body);
+    expect(body.share_id).toBe("test-share-abc");
+    expect(body.session_id).toBe("session-e2e");
+
+    expect(Array.isArray(body.messages)).toBe(true);
+    expect(body.messages.length).toBe(4);
+    expect(body.messages[0].type).toBe("user");
+    expect(body.messages[0].text).toBe("I need help with booking");
+    expect(body.messages[1].type).toBe("assistant");
+    expect(body.messages[1].text).toContain("Sure!");
+    expect(body.messages[0].created_at).toBeTruthy();
+
+    expect(Array.isArray(body.traces)).toBe(true);
+    expect(body.traces.length).toBe(1);
+
+    const trace = body.traces[0];
+    expect("id" in trace).toBe(true);
+    expect("stages" in trace).toBe(true);
+    expect("stat" in trace).toBe(true);
+
+    expect(trace.stages.querier).toBeTruthy();
+    expect(trace.stages.querier.raw).toBeTruthy();
+    expect(trace.stages.querier.summary).toBeTruthy();
+
+    expect(trace.stages.router).toBeTruthy();
+    expect(trace.stages.router.summary).toBeTruthy();
+
+    expect(trace.stages.agent).toBeNull();
+    expect(trace.stages.generator).toBeNull();
+    expect(trace.stages.questioner).toBeNull();
+
+    expect(trace.stat).toBeTruthy();
+    expect(trace.stat.querierDuration).toBe(120);
+    expect(trace.stat.routerDuration).toBe(85);
+    expect(trace.stat.agentDuration).toBe(340);
+  });
+
+  it("includes CORS headers on all API responses", async () => {
+    const res = await get(port(), "/api/session?share_id=test-share-abc");
+    expect(res.headers["access-control-allow-origin"]).toBe("*");
+    expect(res.headers["content-type"]).toContain("application/json");
+  });
+
+  // ===== Querier summary extraction =====
+
+  it("extracts querier summary fields correctly", async () => {
+    const res = await get(port(), "/api/session?share_id=test-share-abc");
+    const body = JSON.parse(res.body);
+    const querier = body.traces[0].stages.querier;
+
+    expect(querier.summary).toBeTruthy();
+    expect(querier.summary.language).toBe("en");
+    expect(querier.summary.intent).toBe("booking");
+    expect(querier.summary.model).toBe("gpt-4");
+    expect(querier.summary.tokenUsage).toBeTruthy();
+    expect(querier.summary.tokenUsage.promptTokens).toBe(150);
+    expect(querier.summary.tokenUsage.totalTokens).toBe(180);
+    expect(querier.summary.traceId).toBe("trace-e2e-001");
+  });
+
+  // ===== Router summary extraction =====
+
+  it("extracts router summary fields correctly", async () => {
+    const res = await get(port(), "/api/session?share_id=test-share-abc");
+    const body = JSON.parse(res.body);
+    const router = body.traces[0].stages.router;
+
+    expect(router.summary).toBeTruthy();
+    expect(router.summary.scenarioName).toBe("dental_booking");
+    expect(router.summary.flowId).toBe("flow-001");
+    expect(router.summary.intent).toBe("book_appointment");
+    expect(router.summary.searchType).toBe("semantic");
+  });
+
+  afterAll(async () => {
     server.close();
     await closePool();
 
@@ -198,155 +320,5 @@ describe("Integration: full flow end-to-end", () => {
     });
     await conn.query(`DROP DATABASE IF EXISTS ${TEST_DB_CONFIG.database}`);
     await conn.end();
-  });
-
-  // ===== Static file serving =====
-
-  it("serves index.html at /", async () => {
-    const res = await get((server.address() as { port: number }).port, "/");
-    assert.strictEqual(res.status, 200);
-    assert.ok(res.body.includes("tracebug"));
-    assert.ok(res.body.includes("share-id-input"));
-    assert.ok(res.body.includes('href="/style.css"'));
-    assert.ok(res.body.includes('src="/app.js"'));
-  });
-
-  it("serves style.css", async () => {
-    const res = await get((server.address() as { port: number }).port, "/style.css");
-    assert.strictEqual(res.status, 200);
-    assert.ok(res.headers["content-type"]?.includes("text/css"));
-    assert.ok(res.body.includes(".message-card"));
-    assert.ok(res.body.includes(".json-tree"));
-  });
-
-  it("serves app.js", async () => {
-    const res = await get((server.address() as { port: number }).port, "/app.js");
-    assert.strictEqual(res.status, 200);
-    assert.ok(res.headers["content-type"]?.includes("javascript"));
-    assert.ok(res.body.includes("fetchSession"));
-    assert.ok(res.body.includes("renderJsonTree"));
-  });
-
-  it("returns 404 for unknown routes", async () => {
-    const res = await get((server.address() as { port: number }).port, "/unknown");
-    assert.strictEqual(res.status, 404);
-  });
-
-  // ===== API error handling =====
-
-  it("returns 400 when share_id is missing", async () => {
-    const res = await get((server.address() as { port: number }).port, "/api/session");
-    assert.strictEqual(res.status, 400);
-    const body = JSON.parse(res.body);
-    assert.deepStrictEqual(body, { error: "share_id is required" });
-  });
-
-  it("returns 404 for non-existent share_id", async () => {
-    const res = await get(
-      (server.address() as { port: number }).port,
-      "/api/session?share_id=does-not-exist",
-    );
-    assert.strictEqual(res.status, 404);
-    const body = JSON.parse(res.body);
-    assert.deepStrictEqual(body, { error: "Share ID not found" });
-  });
-
-  // ===== Full API response =====
-
-  it("returns valid session data for existing share_id", async () => {
-    const res = await get(
-      (server.address() as { port: number }).port,
-      "/api/session?share_id=test-share-abc",
-    );
-
-    assert.strictEqual(res.status, 200);
-
-    const body = JSON.parse(res.body);
-    assert.strictEqual(body.share_id, "test-share-abc");
-    assert.strictEqual(body.session_id, "session-e2e");
-
-    // Messages
-    assert.ok(Array.isArray(body.messages));
-    assert.strictEqual(body.messages.length, 4);
-    assert.strictEqual(body.messages[0].type, "user");
-    assert.strictEqual(body.messages[0].text, "I need help with booking");
-    assert.strictEqual(body.messages[1].type, "assistant");
-    assert.ok(body.messages[1].text.includes("Sure!"));
-    assert.ok(body.messages[0].created_at);
-
-    // Traces: all pipeline stages grouped into one trace entry
-    assert.ok(Array.isArray(body.traces));
-    assert.strictEqual(body.traces.length, 1);
-
-    const trace = body.traces[0];
-    assert.ok("id" in trace);
-    assert.ok("stages" in trace);
-    assert.ok("stat" in trace);
-
-    // Querier stage should be parsed
-    assert.ok(trace.stages.querier);
-    assert.ok(trace.stages.querier.raw);
-    assert.ok(trace.stages.querier.summary);
-
-    // Router stage should be parsed
-    assert.ok(trace.stages.router);
-    assert.ok(trace.stages.router.summary);
-
-    // Stages that didn't fire should be null
-    assert.strictEqual(trace.stages.agent, null);
-    assert.strictEqual(trace.stages.generator, null);
-    assert.strictEqual(trace.stages.questioner, null);
-
-    // Stat should have timing data
-    assert.ok(trace.stat);
-    assert.strictEqual(trace.stat.querierDuration, 120);
-    assert.strictEqual(trace.stat.routerDuration, 85);
-    assert.strictEqual(trace.stat.agentDuration, 340);
-  });
-
-  it("includes CORS headers on all API responses", async () => {
-    const res = await get(
-      (server.address() as { port: number }).port,
-      "/api/session?share_id=test-share-abc",
-    );
-    assert.strictEqual(res.headers["access-control-allow-origin"], "*");
-    assert.ok(res.headers["content-type"]?.includes("application/json"));
-  });
-
-  // ===== Querier summary extraction =====
-
-  it("extracts querier summary fields correctly", async () => {
-    const res = await get(
-      (server.address() as { port: number }).port,
-      "/api/session?share_id=test-share-abc",
-    );
-    const body = JSON.parse(res.body);
-    const querier = body.traces[0].stages.querier;
-
-    assert.ok(querier.summary);
-    assert.strictEqual(querier.summary.language, "en");
-    assert.strictEqual(querier.summary.intent, "booking");
-    assert.strictEqual(querier.summary.model, "gpt-4");
-    assert.ok(querier.summary.tokenUsage);
-    assert.strictEqual(querier.summary.tokenUsage.promptTokens, 150);
-    assert.strictEqual(querier.summary.tokenUsage.totalTokens, 180);
-    assert.strictEqual(querier.summary.traceId, "trace-e2e-001");
-  });
-
-  // ===== Router summary extraction =====
-
-  it("extracts router summary fields correctly", async () => {
-    const res = await get(
-      (server.address() as { port: number }).port,
-      "/api/session?share_id=test-share-abc",
-    );
-    const body = JSON.parse(res.body);
-    const router = body.traces[0].stages.router;
-
-    assert.ok(router.summary);
-    assert.strictEqual(router.summary.scenarioName, "dental_booking");
-    assert.strictEqual(router.summary.flowId, "flow-001");
-    assert.strictEqual(router.summary.intent, "book_appointment");
-    assert.strictEqual(router.summary.searchType, "semantic");
   });
 });
