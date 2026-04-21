@@ -1,5 +1,5 @@
 import { describe, it, afterEach } from "node:test";
-import assert from "assert";
+import  assert  from "assert";
 import fs from "fs";
 import path from "path";
 import os from "os";
@@ -23,15 +23,15 @@ describe("config loading", () => {
         db: {
           host: "localhost",
           port: 3306,
-          user: "testuser",
-          password: "testpass",
-          database: "testdb",
+          user: "root",
+          password: "voithan",
+          database: "bc_app",
         },
       }),
     );
 
     // This will fail because config.ts doesn't exist yet
-    const { loadConfig } = await import("../src/config.ts");
+    const { loadConfig } = await import("../src/config.js");
     const config = loadConfig();
     assert.equal(config.db.host, "localhost");
     assert.equal(config.db.port, 3306);
@@ -43,7 +43,7 @@ describe("config loading", () => {
       fs.unlinkSync(CONFIG_PATH);
     }
 
-    const { loadConfig } = await import("../src/config.ts");
+    const { loadConfig } = await import("../src/config.js");
     assert.throws(() => loadConfig(), /Config not found/);
   });
 
@@ -51,7 +51,7 @@ describe("config loading", () => {
     fs.mkdirSync(CONFIG_DIR, { recursive: true });
     fs.writeFileSync(CONFIG_PATH, JSON.stringify({ port: 3000 }));
 
-    const { loadConfig } = await import("../src/config.ts");
+    const { loadConfig } = await import("../src/config.js");
     assert.throws(() => loadConfig(), /missing 'db' field/);
   });
 });

@@ -1,14 +1,14 @@
 import { describe, it, before, after } from "node:test";
 import assert from "assert";
 import mysql from "mysql2/promise";
-import { createPool, getSessionByShareId, closePool } from "../dist/db.js";
+import { createPool, getSessionByShareId, closePool } from "../src/db.js";
 
 const TEST_DB_CONFIG = {
-  host: "172.18.0.2",
+  host: "localhost",
   port: 3306,
   user: "root",
   password: "voithan",
-  database: "tracebug_test",
+  database: "test_db",
 };
 
 describe("database pool", () => {
@@ -97,16 +97,8 @@ describe("database pool", () => {
     await dbConn.end();
   });
 
-  it("should create a pool and get connection", async () => {
-    pool = createPool(TEST_DB_CONFIG);
-    assert.ok(pool, "Pool should be created");
-
-    const conn = await pool.getConnection();
-    assert.ok(conn, "Should get connection from pool");
-    conn.release();
-  });
-
   it("should get session by share_id", async () => {
+    pool = createPool(TEST_DB_CONFIG);
     const result = await getSessionByShareId(pool, "test-share-123");
 
     assert.ok(result, "Should return session data");
@@ -114,11 +106,11 @@ describe("database pool", () => {
     assert.equal(result.session_id, "session-abc");
     assert.ok(Array.isArray(result.messages));
     assert.equal(result.messages.length, 2);
-    assert.equal(result.messages[0].role, "user");
-    assert.equal(result.messages[0].content, "Hello");
+    assert.equal(result.messages[0].type, "user");
+    assert.equal(result.messages[0].text, "Hello");
     assert.ok(Array.isArray(result.traces));
     assert.equal(result.traces.length, 2);
-    assert.equal(result.traces[0].stage, "querier");
+    assert.equal(result.traces[0].querier, "querier");
   });
 
   it("should return null for non-existent share_id", async () => {
@@ -127,7 +119,7 @@ describe("database pool", () => {
   });
 
   it("should handle concurrent requests", async () => {
-    const promises: Promise<ReturnType<typeof getSessionByShareId>>[] = [];
+    const promises: Promise<Awaited<ReturnType<typeof getSessionByShareId>>>[] = [];
     for (let i = 0; i < 10; i++) {
       promises.push(getSessionByShareId(pool, "test-share-123"));
     }

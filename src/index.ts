@@ -13,6 +13,7 @@ async function main() {
 
   server.listen(port, () => {
     const url = `http://localhost:${port}`;
+    console.log("Loaded config:", JSON.stringify(config));
     console.log(`tracebug running at ${url}`);
     open(url).catch(() => {
       console.log(`Open your browser at ${url}`);

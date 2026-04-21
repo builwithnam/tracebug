@@ -51,14 +51,14 @@ interface SessionResponse {
 function messageToResponse(msg: Message): MessageResponse {
   return {
     id: msg.id,
-    type: msg.role,
-    text: msg.content ?? "",
-    code: null,
-    feedback_type: null,
-    referer_id: null,
-    quick_replies: null,
-    buttons: null,
-    metadata: null,
+    type: msg.type,
+    text: msg.text ?? "",
+    code: msg.code,
+    feedback_type: msg.feedback_type,
+    referer_id: msg.referer_id,
+    quick_replies: msg.quick_replies,
+    buttons: msg.buttons,
+    metadata: msg.metadata,
     created_at: msg.created_at?.toISOString() ?? null,
   };
 }
@@ -91,6 +91,8 @@ export async function handleSession(
     sendJson(res, 400, { error: "share_id is required" });
     return;
   }
+
+  console.log("handleSession called with cofig: ", JSON.stringify(config));
 
   const pool = getPool() ?? createPool(config.db);
 

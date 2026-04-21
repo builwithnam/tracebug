@@ -6,16 +6,28 @@ let pool: Pool | null = null;
 export interface Message {
   id: number;
   session_id: string;
-  role: string;
-  content: string | null;
+  type: string;
+  text: string | null;
+  code: string | null;
+  feedback_type: string | null;
+  referer_id: number | null;
+  quick_replies: string | null;
+  buttons: string | null;
+  metadata: string | null;
   created_at: Date;
 }
 
 export interface MessageData {
   id: number;
   session_id: string;
-  stage: string;
-  payload: object;
+  user_journey: string | null;
+  querier: string | null;
+  router: string | null;
+  scenario_selector: string | null;
+  agent: string | null;
+  generator: string | null;
+  questioner: string | null;
+  stat: string | null;
   created_at: Date;
 }
 

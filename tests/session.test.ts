@@ -39,11 +39,11 @@ function createMocks(url: string, method = "GET"): { req: IncomingMessage; res: 
 }
 
 const TEST_DB_CONFIG = {
-  host: "172.18.0.2",
+  host: "localhost",
   port: 3306,
   user: "root",
   password: "voithan",
-  database: "tracebug_test",
+  database: "db_test",
 };
 
 const mockConfig = {

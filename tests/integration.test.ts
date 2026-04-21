@@ -6,11 +6,11 @@ import { createServer } from "../dist/server.js";
 import { closePool } from "../dist/db.js";
 
 const TEST_DB_CONFIG = {
-  host: "172.18.0.2",
+  host: "localhost",
   port: 3306,
   user: "root",
   password: "voithan",
-  database: "tracebug_e2e",
+  database: "db_test",
 };
 
 const CONFIG = { port: 0, db: TEST_DB_CONFIG }; // port 0 = random available port
