@@ -1,5 +1,5 @@
 {
-  "name": "tracebug",
+  "name": "web",
   "version": "0.1.0",
   "description": "Debug tool for tracing AI chatbot pipeline stages",
   "type": "module",
