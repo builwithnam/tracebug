@@ -1,0 +1,49 @@
+{
+  "name": "tracebug",
+  "version": "0.1.0",
+  "description": "Debug tool for tracing AI chatbot pipeline stages",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "tracebug": "./dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "src/public/"
+  ],
+  "scripts": {
+    "build": "tsc && cp src/public/app.js src/public/index.html src/public/style.css dist/public/",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "node --test tests/**/*.test.ts",
+    "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' 'tests/**/*.ts' --fix",
+    "format": "prettier --write src/ tests/",
+    "format:check": "prettier --check src/ tests/",
+    "check": "npm run lint && npm run format:check"
+  },
+  "keywords": [
+    "debug",
+    "trace",
+    "ai",
+    "chatbot",
+    "pipeline"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "mysql2": "^3.11.0",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tracebug/tsconfig": "workspace:*",
+    "@types/node": "^22.19.17",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^17.24.0",
+    "prettier": "^3.8.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.58.2"
+  }
+}
