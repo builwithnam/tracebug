@@ -5,7 +5,7 @@ import {
   groupTracesByMessageId,
   type SessionResponse,
 } from "@tracebug/core";
-import { createPool, getSessionId, getMessages, getMessageData, getPool } from "../db.js";
+import { createPool, getSessionByShareId, getPool } from "../db.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -30,28 +30,21 @@ export async function handleSession(
     return;
   }
 
-  console.log("handleSession called with cofig: ", JSON.stringify(config));
-
   const pool = getPool() ?? createPool(config.db);
 
   try {
-    const sessionId = await getSessionId(pool, shareId);
+    const session = await getSessionByShareId(pool, shareId);
 
-    if (!sessionId) {
+    if (!session) {
       sendJson(res, 404, { error: "Share ID not found" });
       return;
     }
 
-    const [messages, messageData] = await Promise.all([
-      getMessages(pool, sessionId),
-      getMessageData(pool, sessionId),
-    ]);
-
     const response: SessionResponse = {
-      share_id: shareId,
-      session_id: sessionId,
-      messages: messages.map(messageToResponse),
-      traces: groupTracesByMessageId(messageData),
+      share_id: session.share_id,
+      session_id: session.session_id,
+      messages: session.messages.map(messageToResponse),
+      traces: groupTracesByMessageId(session.traces),
     };
 
     sendJson(res, 200, response);

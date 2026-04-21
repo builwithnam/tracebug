@@ -455,6 +455,6 @@ export function parseAllStages(traces: MessageData[]): ParsedAllStages {
 
   return {
     stages,
-    stat: parseStat(trace ? trace.stat : null),
+    stat: parseStat(trace?.stat ?? null),
   };
 }

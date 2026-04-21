@@ -1,9 +1,21 @@
-import mysql, { Pool, RowDataPacket } from "mysql2/promise";
+import mysql, { Pool, PoolConnection, RowDataPacket } from "mysql2/promise";
 import type { DbConfig, Message, MessageData, SessionData } from "@tracebug/core";
 
 export type { Message, MessageData, SessionData };
 
 let pool: Pool | null = null;
+
+async function withConnection<T>(
+  pool: Pool,
+  fn: (conn: PoolConnection) => Promise<T>,
+): Promise<T> {
+  const conn = await pool.getConnection();
+  try {
+    return await fn(conn);
+  } finally {
+    conn.release();
+  }
+}
 
 export function createPool(dbConfig: DbConfig): Pool {
   if (pool) {
@@ -27,52 +39,33 @@ export function createPool(dbConfig: DbConfig): Pool {
 }
 
 export async function getSessionId(pool: Pool, shareId: string): Promise<string | null> {
-  const conn = await pool.getConnection();
-
-  try {
+  return withConnection(pool, async (conn) => {
     const [shares] = await conn.query<RowDataPacket[]>(
       "SELECT session_id FROM share WHERE id = ?",
       [shareId],
     );
-
-    if (shares.length === 0) {
-      return null;
-    }
-
-    return shares[0].session_id as string;
-  } finally {
-    conn.release();
-  }
+    return shares.length === 0 ? null : (shares[0].session_id as string);
+  });
 }
 
 export async function getMessages(pool: Pool, sessionId: string): Promise<Message[]> {
-  const conn = await pool.getConnection();
-
-  try {
+  return withConnection(pool, async (conn) => {
     const [messages] = await conn.query<RowDataPacket[]>(
       "SELECT * FROM message WHERE session_id = ? ORDER BY id",
       [sessionId],
     );
-
     return messages as Message[];
-  } finally {
-    conn.release();
-  }
+  });
 }
 
 export async function getMessageData(pool: Pool, sessionId: string): Promise<MessageData[]> {
-  const conn = await pool.getConnection();
-
-  try {
+  return withConnection(pool, async (conn) => {
     const [traces] = await conn.query<RowDataPacket[]>(
       "SELECT * FROM message_data WHERE session_id = ? ORDER BY id",
       [sessionId],
     );
-
     return traces as MessageData[];
-  } finally {
-    conn.release();
-  }
+  });
 }
 
 export async function getSessionByShareId(
