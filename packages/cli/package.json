@@ -1,0 +1,32 @@
+{
+  "name": "tracebug",
+  "version": "0.1.0",
+  "description": "CLI tool for debugging chatbot session traces",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "tracebug": "./dist/cli.js"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@tracebug/core": "workspace:*",
+    "commander": "^14.0.3",
+    "mysql2": "^3.11.0"
+  },
+  "devDependencies": {
+    "@tracebug/tsconfig": "workspace:*",
+    "@types/node": "^22.19.17",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.4"
+  }
+}

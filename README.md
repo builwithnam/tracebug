@@ -1,8 +1,13 @@
 # tracebug
 
-A local web UI for debugging chatbot session traces. Paste a `share_id` → get a human-readable session trace showing the full conversation and pipeline stages with collapsible, pretty-printed JSON.
+A tool for debugging chatbot session traces. Paste a `share_id` → get a human-readable session trace showing the full conversation and pipeline stages.
+
+- **Web UI:** Browser-based interface with collapsible, pretty-printed JSON
+- **CLI:** Command-line tool for programmatic access and AI agents
 
 ## Quick Start
+
+### Web UI
 
 ```bash
 pnpm install
@@ -10,17 +15,28 @@ pnpm build
 pnpm --filter web start
 ```
 
-This starts a local server and opens the browser at `http://localhost:3000`.
+This starts a local server at `http://localhost:3000`.
+
+### CLI
+
+```bash
+npx tracebug@latest abc123
+```
+
+See [CLI_INSTALL.md](CLI_INSTALL.md) for detailed installation instructions for AI agents.
 
 ## Monorepo Structure
 
 ```
 tracebug/
 ├── apps/
-│   └── web/                  # Web UI + API server (Node.js)
+│   └── web/                  # Web UI (Next.js)
 ├── packages/
+│   ├── cli/                  # tracebug — CLI tool
 │   ├── core/                 # @tracebug/core — headless business logic
+│   ├── ui/                   # @tracebug/ui — React UI components
 │   └── tsconfig/             # @tracebug/tsconfig — shared TypeScript config
+├── server/                   # Express API server
 ├── turbo.json
 └── pnpm-workspace.yaml
 ```
@@ -29,9 +45,13 @@ tracebug/
 
 Platform-agnostic package with zero runtime dependencies. Contains domain types, pipeline stage parsing, and response shaping. Reusable across any consumer (CLI, browser, different server frameworks).
 
+### `packages/cli`
+
+Command-line tool for querying session traces. Uses `@tracebug/core` for business logic and `mysql2` for database access. Supports JSON output for AI agent integration.
+
 ### `apps/web`
 
-The web application — thin HTTP server that uses `@tracebug/core` for business logic and `mysql2` for database access.
+The web application — Next.js app that uses `@tracebug/core` and `@tracebug/ui` for the interface, with API routes using `mysql2` for database access.
 
 ## Commands
 
