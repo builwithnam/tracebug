@@ -4,32 +4,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-### Development
 ```bash
-pnpm install                       # Install dependencies
-pnpm build                         # Build all packages (turbo cached)
-pnpm dev                           # Watch mode for all packages
-pnpm --filter web dev              # Start Next.js dev server
-pnpm --filter @tracebug/server dev # Start Express API server
-```
+# Quick Start (Makefile)
+make help                             # Show all available commands
+make dev                              # Start development environment (web + API servers)
+make build                            # Build all packages
+make test                             # Run all tests
+make install                          # Install dependencies
+make clean                            # Clean build artifacts and cache
 
-### Testing
-```bash
-pnpm test                                    # Run all tests (vitest)
-pnpm --filter @tracebug/server test          # Run server tests
-pnpm --filter @tracebug/server test:watch    # Watch mode for server tests
-```
+# Development (pnpm)
+pnpm install                          # Install dependencies
+pnpm build                            # Build all packages (turbo cached)
+pnpm dev                              # Watch mode for all packages
+pnpm --filter web dev                 # Start Next.js dev server
+pnpm --filter @tracebug/server dev    # Start Express API server
 
-### Linting & Formatting
-```bash
-pnpm lint                 # Lint all packages
-pnpm lint:fix             # Lint and fix all packages
-pnpm format               # Format with Prettier
-pnpm check                # Lint + format check
-```
+# Testing
+pnpm test                             # Run all tests (vitest)
+pnpm --filter @tracebug/server test   # Run server tests
+pnpm --filter @tracebug/server test:watch  # Watch mode for server tests
 
-### Type Checking
-```bash
+# Linting & Formatting
+pnpm lint                             # Lint all packages
+pnpm lint:fix                         # Lint and fix all packages
+pnpm format                           # Format with Prettier
+pnpm check                            # Lint + format check
+
+# Type Checking
 pnpm --filter @tracebug/server type-check  # Type check server
 pnpm --filter @tracebug/core type-check    # Type check core package
 ```
