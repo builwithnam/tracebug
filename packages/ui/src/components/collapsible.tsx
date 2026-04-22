@@ -1,6 +1,12 @@
 import * as React from "react";
 import { cn } from "../lib/utils";
 
+/* ---------- Custom Collapsible Component ---------- */
+/* Custom implementation since @base-ui/react v1.4.1 does not include Collapsible.
+ * This provides simple expand/collapse functionality.
+ * When @base-ui/react adds Collapsible, consider migrating to it.
+ */
+
 /* ---------- Collapsible ---------- */
 
 interface CollapsibleContextValue {

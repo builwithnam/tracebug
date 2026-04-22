@@ -36,11 +36,11 @@ pnpm --filter @tracebug/core type-check    # Type check core package
 
 ## Architecture
 
-This is a **pnpm workspace monorepo** using **Turborepo** for task orchestration.
+Backend + monorepo frontend (pnpm workspaces + Turborepo) with shared packages.
 
 ```
 tracebug/
-├── server/                # @tracebug/server — Express API server (Node.js, ESM)
+├── server/                # Express API server (Node.js, ESM)
 │   ├── src/
 │   │   ├── index.ts       # Express entry point
 │   │   ├── config.ts      # Loads ~/.tracebug/settings.json
@@ -59,25 +59,6 @@ tracebug/
 ├── turbo.json             # Turborepo task pipeline configuration
 └── pnpm-workspace.yaml    # Workspace definitions
 ```
-
-### @tracebug/core
-Platform-agnostic package with **zero runtime dependencies**. Contains:
-- Domain types (`DbConfig`, `AppConfig`, `Message`, `MessageData`, `SessionData`)
-- Pipeline stage parsing (`parseStage`, `parseAllStages`, `parseStat`)
-- Response shaping (`messageToResponse`, `groupTracesByMessageId`)
-
-### @tracebug/server
-Independent Express API server. Contains:
-- Entry point: `src/index.ts` — Express app with CORS, JSON parsing
-- Routes: `src/routes/session.ts` — GET endpoint for session traces
-- Database: `src/db.ts` — MySQL connection pool and queries
-- Config: `src/config.ts` — loads `~/.tracebug/settings.json`
-
-### apps/web (Next.js)
-Next.js frontend using App Router. Two routes:
-- `/` — Landing page (enter share ID)
-- `/session?share_id=xxx` — Session trace view
-- Uses `@tracebug/ui` components, `next.config.ts` rewrites `/api/*` to Express server
 
 ## Configuration
 
@@ -118,6 +99,16 @@ Tests use **Vitest**. Test files use `*.test.ts` pattern.
 - **Prettier**: 100 char line width, double quotes, trailing commas, semicolons
 - **ESLint**: `@_` prefix for unused vars, no explicit `any` (warn)
 - **TypeScript**: Strict mode via `@tracebug/tsconfig`
+
+## Documentation
+
+- **DO NOT create summary docs after every task** - Only create documentation summaries for:
+  - Major refactors or architecture changes
+  - New features or significant additions
+  - Breaking changes or migration guides
+  - One-time setup tasks
+- **Small tasks** (bug fixes, minor edits, small improvements) should NOT generate summary docs
+- **Documentation location**: Use `docs/` folder for project documentation, keep root directory clean
 
 ## When Working with Database
 

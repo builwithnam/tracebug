@@ -6,9 +6,9 @@ interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const sizeMap = {
-  sm: "w-4 h-4",
-  default: "w-6 h-6",
-  lg: "w-8 h-8",
+  sm: "size-4",
+  default: "size-6",
+  lg: "size-8",
 };
 
 function Spinner({ size = "default", className, ...props }: SpinnerProps) {
@@ -40,5 +40,8 @@ function Spinner({ size = "default", className, ...props }: SpinnerProps) {
     </div>
   );
 }
+
+/* ---------- Size Support ---------- */
+/* Use size-* when width and height are equal (size-4 not w-4 h-4) */
 
 export { Spinner };

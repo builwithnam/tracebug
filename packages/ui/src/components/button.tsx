@@ -62,4 +62,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
+/* ---------- Icon Support ---------- */
+/* Icons in Button use data-icon="inline-start" or data-icon="inline-end"
+ * No sizing classes on icons inside components - components handle icon sizing via CSS
+ */
+
 export { Button, buttonVariants };
