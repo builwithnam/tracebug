@@ -17,10 +17,7 @@ interface TooltipProps {
 
 const Tooltip = ({ open, onOpenChange, children }: TooltipProps) => {
   return (
-    <TooltipPrimitive.Tooltip.Root
-      open={open}
-      onOpenChange={onOpenChange}
-    >
+    <TooltipPrimitive.Tooltip.Root open={open} onOpenChange={onOpenChange}>
       {children}
     </TooltipPrimitive.Tooltip.Root>
   );
@@ -34,7 +31,9 @@ interface TooltipTriggerProps {
 }
 
 const TooltipTrigger = ({ render, children }: TooltipTriggerProps) => {
-  return <TooltipPrimitive.Tooltip.Trigger render={render}>{children}</TooltipPrimitive.Tooltip.Trigger>;
+  return (
+    <TooltipPrimitive.Tooltip.Trigger render={render}>{children}</TooltipPrimitive.Tooltip.Trigger>
+  );
 };
 
 /* ---------- TooltipPositioner ---------- */

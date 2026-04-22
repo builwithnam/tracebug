@@ -90,4 +90,9 @@ const CollapsibleContent = React.forwardRef<HTMLDivElement, CollapsibleContentPr
 );
 CollapsibleContent.displayName = "CollapsibleContent";
 
-export { Collapsible, CollapsibleTrigger, CollapsibleContent, useCollapsible as useCollapsibleContext };
+export {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+  useCollapsible as useCollapsibleContext,
+};

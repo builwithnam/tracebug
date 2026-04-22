@@ -31,7 +31,9 @@ interface PopoverTriggerProps {
 }
 
 const PopoverTrigger = ({ render, children }: PopoverTriggerProps) => {
-  return <PopoverPrimitive.Popover.Trigger render={render}>{children}</PopoverPrimitive.Popover.Trigger>;
+  return (
+    <PopoverPrimitive.Popover.Trigger render={render}>{children}</PopoverPrimitive.Popover.Trigger>
+  );
 };
 
 /* ---------- PopoverPortal ---------- */
@@ -42,7 +44,11 @@ interface PopoverPortalProps {
 }
 
 const PopoverPortal = ({ children, container }: PopoverPortalProps) => {
-  return <PopoverPrimitive.Popover.Portal container={container}>{children}</PopoverPrimitive.Popover.Portal>;
+  return (
+    <PopoverPrimitive.Popover.Portal container={container}>
+      {children}
+    </PopoverPrimitive.Popover.Portal>
+  );
 };
 
 /* ---------- PopoverPositioner ---------- */
@@ -82,7 +88,9 @@ interface PopoverCloseProps {
 }
 
 const PopoverClose = ({ render, children }: PopoverCloseProps) => {
-  return <PopoverPrimitive.Popover.Close render={render}>{children}</PopoverPrimitive.Popover.Close>;
+  return (
+    <PopoverPrimitive.Popover.Close render={render}>{children}</PopoverPrimitive.Popover.Close>
+  );
 };
 
 export { Popover, PopoverTrigger, PopoverPortal, PopoverPositioner, PopoverPopup, PopoverClose };

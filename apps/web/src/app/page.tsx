@@ -104,9 +104,7 @@ export default function LandingPage() {
 
         {/* Footer - warm, subtle */}
         <div className="px-10 pb-6 text-center">
-          <p className="text-xs text-foreground-tertiary">
-            A warm, thoughtful debugging companion
-          </p>
+          <p className="text-xs text-foreground-tertiary">A warm, thoughtful debugging companion</p>
         </div>
       </Card>
     </div>

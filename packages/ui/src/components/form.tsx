@@ -24,7 +24,10 @@ const FieldLabel = React.forwardRef<HTMLLabelElement, FieldLabelProps>(
   ({ className, ...props }, ref) => (
     <FieldPrimitive.Field.Label
       ref={ref}
-      className={cn("text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70", className)}
+      className={cn(
+        "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        className,
+      )}
       {...props}
     />
   ),
@@ -74,7 +77,10 @@ interface CheckboxProps {
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ required, value, checked, defaultChecked, onCheckedChange, disabled, className, ...props }, ref) => (
+  (
+    { required, value, checked, defaultChecked, onCheckedChange, disabled, className, ...props },
+    ref,
+  ) => (
     <CheckboxPrimitive.Checkbox.Root
       ref={ref}
       required={required}
@@ -145,7 +151,17 @@ interface RadioGroupProps {
   className?: string;
 }
 
-const RadioGroup = ({ name, defaultValue, value, onValueChange, required, disabled, children, className, ...props }: RadioGroupProps) => {
+const RadioGroup = ({
+  name,
+  defaultValue,
+  value,
+  onValueChange,
+  required,
+  disabled,
+  children,
+  className,
+  ...props
+}: RadioGroupProps) => {
   return (
     <RadioGroupPrimitive.RadioGroup
       name={name}
@@ -175,7 +191,10 @@ interface SwitchProps {
 }
 
 const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
-  ({ required, value, checked, defaultChecked, onCheckedChange, disabled, className, ...props }, ref) => (
+  (
+    { required, value, checked, defaultChecked, onCheckedChange, disabled, className, ...props },
+    ref,
+  ) => (
     <SwitchPrimitive.Switch.Root
       ref={ref}
       required={required}
@@ -205,13 +224,4 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
 );
 Switch.displayName = "Switch";
 
-export {
-  Field,
-  FieldLabel,
-  FieldDescription,
-  FieldError,
-  Checkbox,
-  Radio,
-  RadioGroup,
-  Switch,
-};
+export { Field, FieldLabel, FieldDescription, FieldError, Checkbox, Radio, RadioGroup, Switch };

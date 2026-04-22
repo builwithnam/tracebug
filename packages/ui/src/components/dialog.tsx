@@ -126,7 +126,11 @@ DialogDescription.displayName = "DialogDescription";
 
 const DialogFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex items-center justify-end gap-3 mt-6", className)} {...props} />
+    <div
+      ref={ref}
+      className={cn("flex items-center justify-end gap-3 mt-6", className)}
+      {...props}
+    />
   ),
 );
 DialogFooter.displayName = "DialogFooter";
@@ -139,29 +143,30 @@ interface DialogCloseProps {
 }
 
 const DialogClose = ({ render, children }: DialogCloseProps) => {
-  return <BaseDialog.Close render={render}>{children}</BaseDialog.Close>
+  return <BaseDialog.Close render={render}>{children}</BaseDialog.Close>;
 };
 
 /* ---------- DialogCloseButton ---------- */
 
-const DialogCloseButton = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
-  ({ className, ...props }, ref) => (
-    <BaseDialog.Close
-      render={
-        <button
-          ref={ref}
-          className={cn(
-            "rounded-md p-1 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors",
-            className,
-          )}
-          {...props}
-        >
-          <X className="size-4" />
-        </button>
-      }
-    />
-  ),
-);
+const DialogCloseButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(({ className, ...props }, ref) => (
+  <BaseDialog.Close
+    render={
+      <button
+        ref={ref}
+        className={cn(
+          "rounded-md p-1 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors",
+          className,
+        )}
+        {...props}
+      >
+        <X className="size-4" />
+      </button>
+    }
+  />
+));
 DialogCloseButton.displayName = "DialogCloseButton";
 
 export {

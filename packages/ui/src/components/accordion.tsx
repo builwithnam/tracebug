@@ -40,7 +40,12 @@ interface AccordionItemProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const AccordionItem = React.forwardRef<HTMLDivElement, AccordionItemProps>(
   ({ className, value, ...props }, ref) => (
-    <AccordionPrimitive.Accordion.Item ref={ref} value={value} className={cn("border-b border-border", className)} {...props} />
+    <AccordionPrimitive.Accordion.Item
+      ref={ref}
+      value={value}
+      className={cn("border-b border-border", className)}
+      {...props}
+    />
   ),
 );
 AccordionItem.displayName = "AccordionItem";

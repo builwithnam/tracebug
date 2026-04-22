@@ -59,12 +59,7 @@ function JsonNode({ data, depth, maxDepth, maxStringLength }: JsonNodeProps) {
 
   if (Array.isArray(data)) {
     return (
-      <JsonArray
-        data={data}
-        depth={depth}
-        maxDepth={maxDepth}
-        maxStringLength={maxStringLength}
-      />
+      <JsonArray data={data} depth={depth} maxDepth={maxDepth} maxStringLength={maxStringLength} />
     );
   }
 
@@ -99,9 +94,7 @@ function JsonString({ value, maxStringLength }: { value: string; maxStringLength
     );
   }
 
-  return (
-    <span className="text-success font-medium">&quot;{value}&quot;</span>
-  );
+  return <span className="text-success font-medium">&quot;{value}&quot;</span>;
 }
 
 /* ---------- JsonObject ---------- */
@@ -154,9 +147,7 @@ function JsonObject({
                 maxDepth={maxDepth}
                 maxStringLength={maxStringLength}
               />
-              <span className="text-foreground mx-0.5">
-                {i < entries.length - 1 ? "," : ""}
-              </span>
+              <span className="text-foreground mx-0.5">{i < entries.length - 1 ? "," : ""}</span>
             </div>
           ))}
         </div>
@@ -216,9 +207,7 @@ function JsonArray({
                 maxDepth={maxDepth}
                 maxStringLength={maxStringLength}
               />
-              <span className="text-foreground mx-0.5">
-                {i < data.length - 1 ? "," : ""}
-              </span>
+              <span className="text-foreground mx-0.5">{i < data.length - 1 ? "," : ""}</span>
             </div>
           ))}
         </div>

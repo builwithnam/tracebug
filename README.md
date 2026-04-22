@@ -11,11 +11,17 @@ A tool for debugging chatbot session traces. Paste a `share_id` → get a human-
 
 ```bash
 pnpm install
+pnpm --filter web dev
+```
+
+This starts a local server at `http://localhost:3001`.
+
+For production builds:
+
+```bash
 pnpm build
 pnpm --filter web start
 ```
-
-This starts a local server at `http://localhost:3000`.
 
 ### CLI
 
@@ -56,10 +62,22 @@ The web application — Next.js app that uses `@tracebug/core` and `@tracebug/ui
 ## Commands
 
 ```bash
+# Using Make (recommended)
+make help           # Show all available commands
+make dev            # Start development environment (web + API servers)
+make build          # Build all packages
+make test           # Run all tests
+make check          # Run verification pipeline (typecheck + tests + E2E)
+make install        # Install dependencies
+make clean          # Clean build artifacts and cache
+
+# Using pnpm directly
 pnpm build          # Build all packages (turbo cached)
 pnpm dev            # Watch mode for all packages
 pnpm test           # Run tests (vitest)
 pnpm lint           # Lint all packages
+pnpm lint:fix       # Lint and fix all packages
+pnpm format         # Format with Prettier
 pnpm check          # Lint + format check
 ```
 
@@ -96,4 +114,5 @@ Create `~/.tracebug/settings.json`:
 - **Package manager:** pnpm workspaces
 - **Testing:** Vitest
 - **Database:** MySQL (mysql2)
-- **Frontend:** Vanilla HTML/CSS/JS
+- **Frontend:** Next.js 15, React 19, Tailwind CSS 4
+- **API Server:** Express

@@ -126,9 +126,7 @@ function SessionView({ data }: { data: SessionResponse }) {
       <main className="max-w-[900px] mx-auto px-4 py-10 flex flex-col gap-4 page-transition">
         {data.messages.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-sm text-foreground-tertiary italic font-serif">
-              No messages found
-            </p>
+            <p className="text-sm text-foreground-tertiary italic font-serif">No messages found</p>
           </div>
         ) : (
           data.messages.map((msg, i) => (
@@ -341,7 +339,10 @@ function TracePanel({ trace }: { trace: TraceResponse }) {
 
 function StageSection({ name, stage }: { name: string; stage: ParsedStage }) {
   return (
-    <Collapsible defaultOpen className="border border-border rounded-lg mb-3 overflow-hidden hover:border-border-strong transition-colors duration-200">
+    <Collapsible
+      defaultOpen
+      className="border border-border rounded-lg mb-3 overflow-hidden hover:border-border-strong transition-colors duration-200"
+    >
       {/* Header */}
       <CollapsibleTrigger className="w-full flex items-center gap-3 px-5 py-3 bg-muted/40 hover:bg-muted/60 transition-colors duration-200 cursor-pointer group">
         <ChevronIcon />
@@ -412,9 +413,7 @@ function SummaryGrid({ summary }: { summary: Record<string, unknown> }) {
           <div
             className="text-xs text-foreground truncate max-w-[500px] hover:whitespace-normal hover:break-all max-sm:max-w-[300px] font-mono"
             title={
-              typeof value === "object" && value !== null
-                ? JSON.stringify(value)
-                : String(value)
+              typeof value === "object" && value !== null ? JSON.stringify(value) : String(value)
             }
           >
             {formatSummaryValue(value)}

@@ -210,10 +210,7 @@ function extractRouterSummary(parsed: unknown): Record<string, unknown> | null {
     toolCallArgs?.["flowId"];
   if (flowId) summary.flowId = flowId;
 
-  const intent =
-    context?.["intent"] ??
-    selectorArgs?.["intent"] ??
-    toolCallArgs?.["intent"];
+  const intent = context?.["intent"] ?? selectorArgs?.["intent"] ?? toolCallArgs?.["intent"];
   if (intent) summary.intent = intent;
 
   const searchType =
@@ -231,8 +228,7 @@ function extractRouterSummary(parsed: unknown): Record<string, unknown> | null {
     toolCallArgs?.["cypher_query"] ??
     toolCallArgs?.["cypherQuery"];
   if (cypherQuery) {
-    const cypherStr =
-      typeof cypherQuery === "string" ? cypherQuery : JSON.stringify(cypherQuery);
+    const cypherStr = typeof cypherQuery === "string" ? cypherQuery : JSON.stringify(cypherQuery);
     summary.cypherQuery = truncate(cypherStr, 200);
   }
 
@@ -316,8 +312,7 @@ function extractGeneratorSummary(parsed: unknown): Record<string, unknown> | nul
 
   // Summary text: from LangChain content or flat.summary
   const summaryText =
-    content ??
-    (typeof flat?.["summary"] === "string" ? (flat["summary"] as string) : null);
+    content ?? (typeof flat?.["summary"] === "string" ? (flat["summary"] as string) : null);
   if (summaryText) {
     summary.summary = truncate(summaryText, 500);
   }

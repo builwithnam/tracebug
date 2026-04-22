@@ -15,8 +15,7 @@ const alertVariants = cva(
         default: "bg-background text-foreground border-border",
         destructive:
           "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
-        success:
-          "border-success/50 text-success-foreground bg-success/10 [&>svg]:text-success",
+        success: "border-success/50 text-success-foreground bg-success/10 [&>svg]:text-success",
         info: "border-info/50 text-info-foreground bg-info/10 [&>svg]:text-info",
       },
     },
@@ -26,7 +25,8 @@ const alertVariants = cva(
   },
 );
 
-interface AlertProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {}
+interface AlertProps
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {}
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   ({ className, variant, ...props }, ref) => (

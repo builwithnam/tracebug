@@ -52,7 +52,9 @@ interface SelectTriggerProps {
 }
 
 const SelectTrigger = ({ render, children }: SelectTriggerProps) => {
-  return <SelectPrimitive.Select.Trigger render={render}>{children}</SelectPrimitive.Select.Trigger>;
+  return (
+    <SelectPrimitive.Select.Trigger render={render}>{children}</SelectPrimitive.Select.Trigger>
+  );
 };
 
 /* ---------- SelectPortal ---------- */
@@ -63,7 +65,9 @@ interface SelectPortalProps {
 }
 
 const SelectPortal = ({ children, container }: SelectPortalProps) => {
-  return <SelectPrimitive.Select.Portal container={container}>{children}</SelectPrimitive.Select.Portal>;
+  return (
+    <SelectPrimitive.Select.Portal container={container}>{children}</SelectPrimitive.Select.Portal>
+  );
 };
 
 /* ---------- SelectPositioner ---------- */
@@ -102,9 +106,7 @@ SelectPopup.displayName = "SelectPopup";
 interface SelectGroupProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const SelectGroup = React.forwardRef<HTMLDivElement, SelectGroupProps>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("p-1", className)} {...props} />
-  ),
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("p-1", className)} {...props} />,
 );
 SelectGroup.displayName = "SelectGroup";
 
@@ -142,7 +144,11 @@ SelectItem.displayName = "SelectItem";
 
 /* Default trigger styling helper - use with render prop */
 
-export function SelectTriggerDefault({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function SelectTriggerDefault({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
@@ -161,4 +167,13 @@ export function SelectTriggerDefault({ className, children, ...props }: React.HT
   );
 }
 
-export { Select, SelectLabel, SelectTrigger, SelectPortal, SelectPositioner, SelectPopup, SelectGroup, SelectItem };
+export {
+  Select,
+  SelectLabel,
+  SelectTrigger,
+  SelectPortal,
+  SelectPositioner,
+  SelectPopup,
+  SelectGroup,
+  SelectItem,
+};
