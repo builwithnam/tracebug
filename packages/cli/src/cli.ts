@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { getSessionByShareId, closePool } from "./db.js";
+import { getSessionByShareId, getSessionBySessionId, closePool } from "./db.js";
 import { getConfig, getEnvConfig } from "./config.js";
 import { formatOutput, formatError } from "./format.js";
 import * as os from "node:os";
@@ -13,10 +13,11 @@ program
   .name("tracebug")
   .description("CLI tool for debugging chatbot session traces")
   .version("0.1.0")
-  .argument("<share_id>", "The share ID to look up")
+  .argument("[share_id]", "The share ID to look up")
+  .option("--session-id <id>", "Look up by session ID instead of share ID")
   .option("--json", "Output as JSON (default: pretty-printed text)", false)
   .option("--env", "Use environment variables for config", false)
-  .action(async (shareId: string, options) => {
+  .action(async (shareId: string | undefined, options) => {
     const config = options.env ? getEnvConfig() : getConfig();
     const output = options.json ? "json" : (config.output ?? "pretty");
 
@@ -29,11 +30,20 @@ program
       process.exit(1);
     }
 
+    if (!shareId && !options.sessionId) {
+      console.error(formatError("Provide a share_id argument or use --session-id <id>"));
+      process.exit(1);
+    }
+
     try {
-      const session = await getSessionByShareId(shareId);
+      const session = options.sessionId
+        ? await getSessionBySessionId(options.sessionId)
+        : await getSessionByShareId(shareId!);
 
       if (!session) {
-        console.error(formatError(`Share ID "${shareId}" not found`));
+        const lookupId = options.sessionId ?? shareId;
+        const lookupType = options.sessionId ? "Session ID" : "Share ID";
+        console.error(formatError(`${lookupType} "${lookupId}" not found`));
         process.exit(1);
       }
 

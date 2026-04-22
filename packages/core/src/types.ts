@@ -40,7 +40,7 @@ export interface MessageData {
 }
 
 export interface SessionData {
-  share_id: string;
+  share_id?: string;
   session_id: string;
   messages: Message[];
   traces: MessageData[];

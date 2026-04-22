@@ -1,6 +1,6 @@
 import { describe, it, beforeAll, afterAll, expect } from "vitest";
 import mysql from "mysql2/promise";
-import { createPool, getSessionByShareId, closePool } from "../src/db.js";
+import { createPool, getSessionByShareId, getSessionBySessionId, closePool } from "../src/db.js";
 
 const TEST_DB_CONFIG = {
   host: "localhost",
@@ -138,6 +138,21 @@ describe("database pool", () => {
 
   it("should return null for non-existent share_id", async () => {
     const result = await getSessionByShareId(pool, "non-existent");
+    expect(result).toBeNull();
+  });
+
+  it("should get session by session_id", async () => {
+    const result = await getSessionBySessionId(pool, "session-abc");
+
+    expect(result).toBeTruthy();
+    expect(result!.session_id).toBe("session-abc");
+    expect(result!.share_id).toBeUndefined();
+    expect(Array.isArray(result!.messages)).toBe(true);
+    expect(result!.messages.length).toBe(3);
+  });
+
+  it("should return null for non-existent session_id", async () => {
+    const result = await getSessionBySessionId(pool, "non-existent");
     expect(result).toBeNull();
   });
 

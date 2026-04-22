@@ -22,7 +22,7 @@ export interface TraceResponse {
 }
 
 export interface SessionResponse {
-  share_id: string;
+  share_id: string | null;
   session_id: string;
   messages: MessageResponse[];
   traces: TraceResponse[];

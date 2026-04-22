@@ -12,7 +12,9 @@ function formatPretty(session: SessionData): string {
   const lines: string[] = [];
 
   lines.push("=" .repeat(60));
-  lines.push(`Share ID: ${session.share_id}`);
+  if (session.share_id) {
+    lines.push(`Share ID: ${session.share_id}`);
+  }
   lines.push(`Session ID: ${session.session_id}`);
   lines.push("=".repeat(60));
   lines.push("");

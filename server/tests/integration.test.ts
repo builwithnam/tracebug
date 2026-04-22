@@ -184,16 +184,25 @@ describe("Integration: API end-to-end", () => {
 
   // ===== API error handling =====
 
-  it("returns 400 when share_id is missing", async () => {
+  it("returns 400 when both share_id and session_id are missing", async () => {
     const { status, body } = await request(createApp(), "/api/session");
     expect(status).toBe(400);
-    expect(body).toEqual({ error: "share_id is required" });
+    expect(body).toEqual({ error: "share_id or session_id is required" });
   });
 
   it("returns 404 for non-existent share_id", async () => {
     const { status, body } = await request(createApp(), "/api/session?share_id=does-not-exist");
     expect(status).toBe(404);
-    expect(body).toEqual({ error: "Share ID not found" });
+    expect(body).toEqual({ error: "Session not found" });
+  });
+
+  it("returns 404 for non-existent session_id", async () => {
+    const { status, body } = await request(
+      createApp(),
+      "/api/session?session_id=does-not-exist",
+    );
+    expect(status).toBe(404);
+    expect(body).toEqual({ error: "Session not found" });
   });
 
   // ===== Full API response =====

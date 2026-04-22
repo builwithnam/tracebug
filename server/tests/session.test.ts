@@ -2,7 +2,7 @@ import { describe, it, beforeAll, afterAll, expect } from "vitest";
 import express, { type Express } from "express";
 import mysql from "mysql2/promise";
 import { sessionRouter } from "../src/routes/session.js";
-import { createPool, closePool } from "../src/db.js";
+import { createPool, closePool, getSessionBySessionId } from "../src/db.js";
 
 const TEST_DB_CONFIG = {
   host: "localhost",
@@ -82,6 +82,13 @@ describe("GET /api/session", () => {
       "session-123",
     ]);
 
+    // Insert a second session with no share record (for session_id-only lookup)
+    await conn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
+      "session-direct",
+      "user",
+      "Direct access",
+    ]);
+
     await conn.execute("INSERT INTO message (session_id, role, content) VALUES (?, ?, ?)", [
       "session-123",
       "user",
@@ -130,18 +137,28 @@ describe("GET /api/session", () => {
     return app;
   }
 
-  it("should return 400 when share_id is missing", async () => {
+  it("should return 400 when both share_id and session_id are missing", async () => {
     const { status, body } = await request(createApp(), "/api/session");
 
     expect(status).toBe(400);
-    expect(body).toEqual({ error: "share_id is required" });
+    expect(body).toEqual({ error: "share_id or session_id is required" });
   });
 
   it("should return 404 when share_id not found", async () => {
     const { status, body } = await request(createApp(), "/api/session?share_id=non-existent");
 
     expect(status).toBe(404);
-    expect(body).toEqual({ error: "Share ID not found" });
+    expect(body).toEqual({ error: "Session not found" });
+  });
+
+  it("should return 404 when session_id not found", async () => {
+    const { status, body } = await request(
+      createApp(),
+      "/api/session?session_id=non-existent",
+    );
+
+    expect(status).toBe(404);
+    expect(body).toEqual({ error: "Session not found" });
   });
 
   it("should return session data with valid share_id", async () => {
@@ -177,6 +194,33 @@ describe("GET /api/session", () => {
     const stat = trace.stat as Record<string, unknown>;
     expect(stat.querierDuration).toBe(100);
     expect(stat.routerDuration).toBe(50);
+  });
+
+  it("should return session data with valid session_id", async () => {
+    const { status, body: rawBody } = await request(
+      createApp(),
+      "/api/session?session_id=session-123",
+    );
+
+    const body = rawBody as Record<string, unknown>;
+    expect(status).toBe(200);
+    expect(body.share_id).toBeNull();
+    expect(body.session_id).toBe("session-123");
+    expect(Array.isArray(body.messages)).toBe(true);
+  });
+
+  it("should return session data for session_id with no share record", async () => {
+    const { status, body: rawBody } = await request(
+      createApp(),
+      "/api/session?session_id=session-direct",
+    );
+
+    const body = rawBody as Record<string, unknown>;
+    expect(status).toBe(200);
+    expect(body.share_id).toBeNull();
+    expect(body.session_id).toBe("session-direct");
+    const messages = body.messages as Record<string, unknown>[];
+    expect(messages.length).toBe(1);
   });
 
   it("should return 500 for unexpected errors", async () => {

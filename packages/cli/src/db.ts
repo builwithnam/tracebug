@@ -67,6 +67,26 @@ async function getMessageData(pool: Pool, sessionId: string): Promise<MessageDat
   });
 }
 
+export async function getSessionBySessionId(sessionId: string): Promise<SessionData | null> {
+  const config = getConfig();
+  const dbPool = createPool(config.db);
+
+  const [messages, traces] = await Promise.all([
+    getMessages(dbPool, sessionId),
+    getMessageData(dbPool, sessionId),
+  ]);
+
+  if (messages.length === 0 && traces.length === 0) {
+    return null;
+  }
+
+  return {
+    session_id: sessionId,
+    messages,
+    traces,
+  };
+}
+
 export async function getSessionByShareId(shareId: string): Promise<SessionData | null> {
   const config = getConfig();
   const dbPool = createPool(config.db);

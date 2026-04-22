@@ -21,21 +21,25 @@ import {
 function SessionPageInner() {
   const searchParams = useSearchParams();
   const shareId = searchParams.get("share_id");
+  const sessionId = searchParams.get("session_id");
 
   const [data, setData] = useState<SessionResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!shareId) {
-      setError("No share ID provided");
+    if (!shareId && !sessionId) {
+      setError("No share ID or session ID provided");
       setLoading(false);
       return;
     }
 
     async function fetchSession() {
       try {
-        const res = await fetch(`/api/session?share_id=${encodeURIComponent(shareId!)}`);
+        const params = shareId
+          ? `share_id=${encodeURIComponent(shareId!)}`
+          : `session_id=${encodeURIComponent(sessionId!)}`;
+        const res = await fetch(`/api/session?${params}`);
         if (!res.ok) {
           throw new Error(res.status === 404 ? "Session not found" : `Server error: ${res.status}`);
         }
@@ -49,7 +53,7 @@ function SessionPageInner() {
     }
 
     fetchSession();
-  }, [shareId]);
+  }, [shareId, sessionId]);
 
   if (loading) {
     return (
@@ -113,7 +117,7 @@ function SessionView({ data }: { data: SessionResponse }) {
           </div>
         </div>
         <div className="flex items-center gap-4 text-xs text-foreground-secondary ml-auto max-sm:ml-0 max-sm:flex-wrap max-sm:gap-3">
-          <Meta label="share_id" value={data.share_id} />
+          {data.share_id && <Meta label="share_id" value={data.share_id} />}
           <Meta label="session_id" value={data.session_id} />
         </div>
       </header>
