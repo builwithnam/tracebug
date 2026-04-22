@@ -1,4 +1,4 @@
-.PHONY: help dev build test install clean
+.PHONY: help dev build test check install clean
 
 help:
 	@echo "Tracebug Development Commands"
@@ -9,6 +9,7 @@ help:
 	@echo "  dev          Start development environment (web + API servers)"
 	@echo "  build        Build all packages"
 	@echo "  test         Run all tests"
+	@echo "  check        Run verification pipeline (typecheck + tests + E2E)"
 	@echo "  install      Install dependencies"
 	@echo "  clean        Clean build artifacts and cache"
 	@echo ""
@@ -26,6 +27,9 @@ build:
 
 test:
 	@pnpm test
+
+check:
+	@./scripts/check.sh
 
 install:
 	@pnpm install

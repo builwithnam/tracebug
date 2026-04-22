@@ -10,6 +10,7 @@ make help                             # Show all available commands
 make dev                              # Start development environment (web + API servers)
 make build                            # Build all packages
 make test                             # Run all tests
+make check                            # Run verification pipeline (typecheck + tests + E2E)
 make install                          # Install dependencies
 make clean                            # Clean build artifacts and cache
 
@@ -54,10 +55,15 @@ tracebug/
 │   └── src/app/
 │       ├── page.tsx       # Landing page (enter share ID)
 │       └── session/       # Session view (reads share_id from URL)
+├── e2e/                   # End-to-end tests
+├── scripts/                # Utility scripts
+│   ├── dev.sh             # Start development environment
+│   └── check.sh           # Verification pipeline (typecheck + tests + E2E)
 ├── packages/
 │   ├── core/              # @tracebug/core — headless business logic
 │   ├── ui/                # @tracebug/ui — React UI components
 │   └── tsconfig/          # @tracebug/tsconfig — shared TypeScript config
+├── Makefile               # Convenience commands
 ├── turbo.json             # Turborepo task pipeline configuration
 └── pnpm-workspace.yaml    # Workspace definitions
 ```
@@ -85,6 +91,7 @@ Tests use **Vitest**. Test files use `*.test.ts` pattern.
 - Server tests are in `server/tests/`
 - Integration tests set up a fresh MySQL database for each run
 - Tests use `beforeAll`/`afterAll` for database setup/teardown
+- E2E tests are in `e2e/` directory (run with `make check`)
 
 ## Terminology
 
